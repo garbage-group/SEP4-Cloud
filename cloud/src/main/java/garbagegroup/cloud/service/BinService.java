@@ -17,7 +17,6 @@ public class BinService implements IBinService{
         this.binRepository = binRepository;
     }
 
-
     //look up a 'Bin' by its id, retreive the associate 'Measurement' and return the humidity value
     @Override
     public Optional<Double> getHumidityById(Long binId) {
