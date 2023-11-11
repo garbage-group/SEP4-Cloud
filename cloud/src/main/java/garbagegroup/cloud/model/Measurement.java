@@ -9,6 +9,8 @@ public class Measurement {
     @Column(columnDefinition = "bigint")
 
     private Long id;
+
+    // Hello
     private double humidity;
     public Long getId() {
         return id;
