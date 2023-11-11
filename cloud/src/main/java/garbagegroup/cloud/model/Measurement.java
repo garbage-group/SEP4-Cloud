@@ -10,7 +10,6 @@ public class Measurement {
 
     private Long id;
     private double humidity;
-
     public Long getId() {
         return id;
     }

@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @Service
 public class BinService implements IBinService{
-
     private BinRepository binRepository;
 
     @Autowired

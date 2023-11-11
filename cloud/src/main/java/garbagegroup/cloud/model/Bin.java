@@ -10,7 +10,6 @@ public class Bin {
     private Long id;
     @OneToOne
     private Measurement measurement;
-
     public Bin(){
 
     }
