@@ -22,6 +22,7 @@ public class BinController {
         this.binService = binService;
     }
 
+
     //The method tries to retrieve humidity information from a service based on a provided ID,
     // handles cases where the humidity is present or not,
     // and logs and returns an error response in case of an exception.
@@ -34,7 +35,7 @@ public class BinController {
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }
