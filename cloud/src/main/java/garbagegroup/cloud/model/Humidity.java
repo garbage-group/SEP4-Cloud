@@ -8,6 +8,7 @@ public class Humidity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigint")
     private Long id;
+    private Long value; // [%]
 
     // Need to add the other attributes regarding humidity
 
@@ -17,6 +18,10 @@ public class Humidity {
      */
     public Humidity () {}
 
+    public Humidity (Long value) {
+        this.value = value;
+    }
+
 
     public void setId(Long id) {
         this.id = id;
@@ -24,5 +29,9 @@ public class Humidity {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getValue() {
+        return value;
     }
 }
