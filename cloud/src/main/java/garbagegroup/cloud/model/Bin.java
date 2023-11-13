@@ -8,9 +8,7 @@ public class Bin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigint")
     private Long id;
-
     private int deviceId;
-
     @OneToOne
     private Humidity humidity;
     public Bin(){

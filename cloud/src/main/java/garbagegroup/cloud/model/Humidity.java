@@ -10,7 +10,7 @@ public class Humidity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigint")
-    private Long BinId;
+    private Long binId;
     private double value;
     private LocalDateTime dateTime;
 
@@ -18,11 +18,11 @@ public class Humidity {
     }
 
     public Long getBinId() {
-        return BinId;
+        return binId;
     }
 
     public void setBinId(Long binId) {
-        BinId = binId;
+        this.binId = binId;
     }
 
     public double getValue() {

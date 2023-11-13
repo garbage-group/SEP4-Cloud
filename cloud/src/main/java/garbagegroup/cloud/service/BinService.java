@@ -1,6 +1,7 @@
 package garbagegroup.cloud.service;
 
 import garbagegroup.cloud.model.Bin;
+import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.repository.BinRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,10 @@ public class BinService implements IBinService{
         this.binRepository = binRepository;
     }
 
-    //look up a 'Bin' by its id, retrieve the associate 'Measurement' and return the humidity value
+    //look up a 'Bin' by its id, retrieve the latest humidity value and return the humidity value
     @Override
     public Optional<Double> getCurrentHumidityByBinId(Long binId) {
-        Optional<Bin> bin = binRepository.findById(binId);
-        return bin.map(value -> value.getHumidity().getValue());
+        Optional<Humidity> bin = binRepository.findTopByBinIdOrderByDateTimeDesc(binId);
+        return bin.map(value -> value.getValue());
     }
 }
