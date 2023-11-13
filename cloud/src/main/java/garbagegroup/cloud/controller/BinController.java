@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Optional;
 
 @RestController
@@ -27,9 +26,9 @@ public class BinController {
     // handles cases where the humidity is present or not,
     // and logs and returns an error response in case of an exception.
     @GetMapping("/{id}/humidity")
-    public ResponseEntity<Double> getHumidityById(@PathVariable Long id) {
+    public ResponseEntity<Double> getCurrentHumidityByBinId(@PathVariable Long id) {
         try {
-            Optional<Double> humidity = binService.getHumidityById(id);
+            Optional<Double> humidity = binService.getCurrentHumidityByBinId(id);
 
             return humidity.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

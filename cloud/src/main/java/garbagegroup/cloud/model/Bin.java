@@ -8,8 +8,11 @@ public class Bin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigint")
     private Long id;
+
+    private int deviceId;
+
     @OneToOne
-    private Measurement measurement;
+    private Humidity humidity;
     public Bin(){
 
     }
@@ -22,11 +25,19 @@ public class Bin {
         this.id = id;
     }
 
-    public Measurement getMeasurement() {
-        return measurement;
+    public int getDeviceId() {
+        return deviceId;
     }
 
-    public void setMeasurement(Measurement measurement) {
-        this.measurement = measurement;
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public Humidity getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(Humidity humidity) {
+        this.humidity = humidity;
     }
 }

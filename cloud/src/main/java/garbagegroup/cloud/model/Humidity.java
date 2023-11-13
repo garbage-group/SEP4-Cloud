@@ -2,27 +2,42 @@ package garbagegroup.cloud.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class Humidity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigint")
-    private Long id;
+    private Long BinId;
+    private double value;
+    private LocalDateTime dateTime;
 
-    // Need to add the other attributes regarding humidity
-
-    /**
-     * Empty constructor for springboot, it uses it when creating the repository
-     * Please never delete/modify this, just create a new constructor if you need one
-     */
-    public Humidity () {}
-
-
-    public void setId(Long id) {
-        this.id = id;
+    public Humidity() {
     }
 
-    public Long getId() {
-        return id;
+    public Long getBinId() {
+        return BinId;
+    }
+
+    public void setBinId(Long binId) {
+        BinId = binId;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
     }
 }

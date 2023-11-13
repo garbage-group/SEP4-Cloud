@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BinRepository extends JpaRepository<Bin, Long> {
 
-
 }
