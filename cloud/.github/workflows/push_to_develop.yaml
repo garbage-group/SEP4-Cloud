@@ -1,0 +1,23 @@
+name: Develop Branch Pull Request
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v2
+        with:
+          java-version: '21'
+          distribution: 'alpine'
+
+      - name: Build with Maven and Run tests
+        run: mvn clean package
