@@ -20,6 +20,4 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven and Run tests
-        run: |
-          cd cloud
-          mvn clean package
+        run: mvn clean package
