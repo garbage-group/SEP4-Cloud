@@ -7,6 +7,8 @@ import java.util.Optional;
 
 @Service
 public interface IBinService {
+
+    Optional<Double> getCurrentHumidityByBinId(Long binId);
     public void getHumidityById(int deviceId);                      // From IoT
     public void saveHumidityById(int deviceId, double humidity);      // Save to DB
     public void setTCPServer(TCPServer tcpServer);
