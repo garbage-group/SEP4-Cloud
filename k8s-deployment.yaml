@@ -1,0 +1,75 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db-service
+spec:
+  selector:
+    app: postgres-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres-db
+          image: postgres:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: garbage-db
+            - name: POSTGRES_USER
+              value: postgres_username
+            - name: POSTGRES_PASSWORD
+              value: postgres_password
+          ports:
+            - containerPort: 5432
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garbage-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garbage-backend
+  template:
+    metadata:
+      labels:
+        app: garbage-backend
+    spec:
+      containers:
+        - name: garbage-backend
+          image: garbage-backend-develop:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://localhost:5432/garbage-db
+            - name: DATABASE_USER
+              value: postgres_username
+            - name: DATABASE_PASSWORD
+              value: postgres_password
+      imagePullSecrets:
+        - name: regcred

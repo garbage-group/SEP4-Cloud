@@ -34,3 +34,29 @@ jobs:
 
       - name: Push to Docker Hub
         run: docker push zythaarcz/garbage-backend-develop:latest
+
+      - name: Install Minikube
+        if: success()
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+      - name: Start Minikube
+        if: success()
+        run: minikube start
+
+      - name: Set Docker Env
+        if: success()
+        run: |
+          eval $(minikube docker-env --shell bash)
+
+      - name: Pull image from Docker Hub
+        if: success()
+        run: |
+          docker pull zythaarcz/garbage-backend-develop:latest
+
+      - name: Deploy to Kubernetes
+        if: success()
+        run: |
+          kubectl apply -f k8s-deployment.yaml
+          kubectl rollout status deployment/spring-boot-app
