@@ -10,4 +10,4 @@ public class CloudApplication {
         SpringApplication.run(CloudApplication.class, args);
     }
 
-} 
+}
