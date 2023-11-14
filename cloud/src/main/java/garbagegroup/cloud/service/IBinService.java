@@ -3,7 +3,6 @@ package garbagegroup.cloud.service;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 

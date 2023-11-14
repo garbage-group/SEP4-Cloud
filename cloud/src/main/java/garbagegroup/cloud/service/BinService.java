@@ -22,7 +22,7 @@ public class BinService implements IBinService {
         this.binRepository = binRepository;
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
-        tcpServer = new TCPServer(this);
+        tcpServer = new TCPServer();
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
@@ -46,10 +46,10 @@ public class BinService implements IBinService {
                     String responseFromIoT = tcpServer.getHumidityById(binId.intValue());
                     if (responseFromIoT.contains("Device with ID " + binOptional.get().getDeviceId() + " is currently unavailable"))
                         return Optional.empty();
+                    handleIoTData(binId.intValue(), responseFromIoT);
                 }
-                allHumidity = binRepository.findById(binId).get().getHumidity();
 
-                System.out.println("Fetched new humidity hopefully");
+                allHumidity = binRepository.findById(binId).get().getHumidity();
                 allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
                 return Optional.of(allHumidity.get(0));
             } else {
@@ -91,8 +91,10 @@ public class BinService implements IBinService {
         }
     }
 
-    private LocalDateTime parseDateTime(String dateTimeString) {
+    private synchronized LocalDateTime parseDateTime(String dateTimeString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy:HH:mm:ss");
         return LocalDateTime.parse(dateTimeString, formatter);
     }
+
+
 }

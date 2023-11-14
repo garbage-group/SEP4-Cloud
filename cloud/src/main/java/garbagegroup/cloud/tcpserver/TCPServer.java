@@ -1,26 +1,18 @@
 package garbagegroup.cloud.tcpserver;
 
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.service.BinService;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TCPServer implements ITCPServer, Runnable {
     private static int nextId = 1;
     private ServerSocket serverSocket;
-    private BinService binService;
     private ServerSocketHandler socketHandler;
     private List<ServerSocketHandler> IoTDevices;
 
-    public TCPServer(BinService binService) {
-        this.binService = binService;
+    public TCPServer() {
         IoTDevices = new ArrayList<>();
 
         try {
@@ -39,7 +31,7 @@ public class TCPServer implements ITCPServer, Runnable {
                 Socket clientSocket = serverSocket.accept();
 
                 // Create a new thread to handle the client connection
-                socketHandler = new ServerSocketHandler(generateId(), clientSocket, this, binService);
+                socketHandler = new ServerSocketHandler(generateId(), clientSocket);
                 IoTDevices.add(socketHandler);
                 new Thread(socketHandler).start();
 
@@ -63,11 +55,11 @@ public class TCPServer implements ITCPServer, Runnable {
         if (IoTDevices.size() == 0) response = "Device with ID " + deviceId + " is currently unavailable";
         for (ServerSocketHandler ssh: IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                ssh.sendMessage("getHumidity");
-                response = "OK";
+                response = ssh.sendMessage("getHumidity");
             }
             else {
                 response = "Device with ID " + deviceId + " is currently unavailable";
+                System.out.println(response);
             }
         }
         return response;
