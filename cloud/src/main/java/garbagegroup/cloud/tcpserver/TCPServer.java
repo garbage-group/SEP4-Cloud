@@ -45,7 +45,8 @@ public class TCPServer implements ITCPServer, Runnable {
 
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
+                //e.printStackTrace();
             }
         }
     }
@@ -59,9 +60,14 @@ public class TCPServer implements ITCPServer, Runnable {
     @Override
     public String getHumidityById(int deviceId) {
         String response = "";
+        if (IoTDevices.size() == 0) response = "Device with ID " + deviceId + " is currently unavailable";
         for (ServerSocketHandler ssh: IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                response = ssh.sendMessage("getHumidity");
+                ssh.sendMessage("getHumidity");
+                response = "OK";
+            }
+            else {
+                response = "Device with ID " + deviceId + " is currently unavailable";
             }
         }
         return response;

@@ -56,17 +56,17 @@ public class ServerSocketHandler implements Runnable
     }
   }
 
-  public String sendMessage(String message) {
-    String response = "";
+  public void sendMessage(String message) {
     try {
       System.out.println("Sending " + message + " to device with ID: " + deviceId);
       outToClient.writeObject(message);
-      response = (String) inFromClient.readObject();
+      outToClient.flush();
     }
-    catch (IOException | ClassNotFoundException e) {
-      e.printStackTrace();
+    catch (IOException e) {
+      System.out.println("Client with an ID: " + deviceId + " disconnected");
+      //e.printStackTrace();
     }
-    return response;
+
   }
 
   public int getDeviceId() { return deviceId; }

@@ -1,5 +1,7 @@
 package garbagegroup.cloud.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -29,7 +31,9 @@ public class Bin {
     @Column(name = "device_id")
     private int deviceId;
 
-    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
+    @JsonManagedReference
+    @JsonIgnoreProperties("bin")
     private List<Humidity> humidity;
 
     public Bin(){
