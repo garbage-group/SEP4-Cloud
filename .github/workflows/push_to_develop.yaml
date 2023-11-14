@@ -3,6 +3,7 @@ name: Develop Branch Pull Request and Push
 on:
   push:
     branches:
+      - 14-set-up-cicd-pipeline
       - main
       - develop
   pull_request:
