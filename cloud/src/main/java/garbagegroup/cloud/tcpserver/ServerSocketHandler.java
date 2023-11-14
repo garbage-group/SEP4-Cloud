@@ -1,9 +1,12 @@
 package garbagegroup.cloud.tcpserver;
 
+import garbagegroup.cloud.service.BinService;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
 
 public class ServerSocketHandler implements Runnable
 {
@@ -12,12 +15,14 @@ public class ServerSocketHandler implements Runnable
   private ObjectInputStream inFromClient;
   private ObjectOutputStream outToClient;
   private TCPServer tcpServer;
+  private BinService binService;
 
 
-  public ServerSocketHandler(int deviceId, Socket socket, TCPServer tcpServer) {
+  public ServerSocketHandler(int deviceId, Socket socket, TCPServer tcpServer, BinService binService) {
     this.deviceId = deviceId;
     this.tcpServer = tcpServer;
     this.socket = socket;
+    this.binService = binService;
     try {
       inFromClient = new ObjectInputStream(socket.getInputStream());
       outToClient = new ObjectOutputStream(socket.getOutputStream());
@@ -31,33 +36,37 @@ public class ServerSocketHandler implements Runnable
 
     try
     {
-      String read = (String) inFromClient.readObject();
-
       while (true)
       {
-        System.out.println("Received from client: " + read);
+        String read = (String) inFromClient.readObject();
+        System.out.println("Received from client with ID " + deviceId + ": " + read);
         if (read.equalsIgnoreCase("exit"))
         {
           socket.close();
           System.out.println("Client disconnected");
           break;
         }
-        // TCP Server handles the incoming data
-        tcpServer.handleIoTData(deviceId, read);
+        // Bin Service handles the incoming data
+        binService.handleIoTData(deviceId, read);
       }
+    }
+    catch (IOException | ClassNotFoundException e) {
+      System.out.println("Client disconnected");
+      //e.printStackTrace();
+    }
+  }
+
+  public String sendMessage(String message) {
+    String response = "";
+    try {
+      System.out.println("Sending " + message + " to device with ID: " + deviceId);
+      outToClient.writeObject(message);
+      response = (String) inFromClient.readObject();
     }
     catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
     }
-  }
-
-  public void sendMessage(String message) {
-    try {
-      outToClient.writeObject(message);
-    }
-    catch (IOException e) {
-      e.printStackTrace();
-    }
+    return response;
   }
 
   public int getDeviceId() { return deviceId; }

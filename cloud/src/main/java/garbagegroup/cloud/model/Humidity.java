@@ -8,19 +8,26 @@ import java.time.LocalDateTime;
 public class Humidity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(columnDefinition = "bigint")
-    private Long BinId;
+    @ManyToOne
+    @JoinColumn(name = "bin_id", nullable = false)
+    private Bin bin;
+
     private double value;
+    @Id
     private LocalDateTime dateTime;
 
     public Humidity() {
     }
 
-    public Long getBinId() {
-        return BinId;
+    public Humidity(Bin bin, double value, LocalDateTime dateTime) {
+        this.bin = bin;
+        this.value = value;
+        this.dateTime = dateTime;
     }
 
+    public Bin getBin() {
+        return bin;
+    }
 
     public double getValue() {
         return value;

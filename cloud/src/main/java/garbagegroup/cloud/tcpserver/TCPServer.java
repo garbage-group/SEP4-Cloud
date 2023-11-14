@@ -1,62 +1,69 @@
 package garbagegroup.cloud.tcpserver;
 
+import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.service.BinService;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TCPServer implements ITCPServer {
+public class TCPServer implements ITCPServer, Runnable {
     private static int nextId = 1;
     private ServerSocket serverSocket;
     private BinService binService;
     private ServerSocketHandler socketHandler;
-    private ConnectionPool connectionPool;
+    private List<ServerSocketHandler> IoTDevices;
 
-    public TCPServer(BinService binService, int port) {
+    public TCPServer(BinService binService) {
         this.binService = binService;
-        connectionPool = new ConnectionPool();
+        IoTDevices = new ArrayList<>();
 
         try {
-            serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void startServer() {
+    @Override
+    public void run() {
         System.out.println("Server started. Waiting for connections...");
 
         while (true) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Client connected: " + clientSocket.getInetAddress());
 
                 // Create a new thread to handle the client connection
-                socketHandler = new ServerSocketHandler(generateId(), clientSocket, this);
-                connectionPool.addDevice(socketHandler);
+                socketHandler = new ServerSocketHandler(generateId(), clientSocket, this, binService);
+                IoTDevices.add(socketHandler);
                 new Thread(socketHandler).start();
+
+                System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    public void startServer() {
+        new Thread(this).start();
+    }
+
     public static int generateId() { return nextId++; }
 
     @Override
-    public void getHumidityById(int deviceId) {
-        connectionPool.sendMessage(deviceId,"getHumidity");
-        //socketHandler.sendMessage("getHumidity");
-    }
-
-    @Override
-    public void handleIoTData(int deviceId, String data) {
-        String prefix = data.substring(0, Math.min(data.length(), 5));
-
-        if (prefix.equals("humid")) {
-            double humidity = Double.parseDouble(data.substring(6));
-            binService.saveHumidityById(deviceId, humidity);
+    public String getHumidityById(int deviceId) {
+        String response = "";
+        for (ServerSocketHandler ssh: IoTDevices) {
+            if (ssh.getDeviceId() == deviceId) {
+                response = ssh.sendMessage("getHumidity");
+            }
         }
+        return response;
     }
 }

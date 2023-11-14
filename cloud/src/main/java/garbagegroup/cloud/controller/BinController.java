@@ -32,6 +32,7 @@ public class BinController {
 
             return humidity.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

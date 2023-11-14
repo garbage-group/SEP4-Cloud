@@ -25,7 +25,7 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
 
             while (true) {
-                System.out.println("Please type message >");
+                //System.out.println("Please type message >");
                 String scanned = scanner.nextLine();
                 outToServer.writeObject(scanned);
 
