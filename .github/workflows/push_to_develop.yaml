@@ -1,10 +1,14 @@
-name: Develop Branch Pull Request
+name: Develop Branch Pull Request and Push
 
 on:
   push:
-    branches: [ 14-set-up-cicd-pipeline ]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [ develop ]
+    branches:
+      - main
+      - develop
 
 jobs:
   build-test:
