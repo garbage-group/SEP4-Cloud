@@ -58,7 +58,9 @@ jobs:
       - name: Deploy to Kubernetes
         if: success()
         run: |
-          kubectl apply -f ./k8s-deployment-copy.yaml
+          echo "apply yaml file"
+          kubectl apply -f ./k8s-deployment.yaml
+          echo "get pods"
           kubectl get pods --show-labels
           kubectl wait --for=condition=Ready pod -l app=garbage-backend -n default
           kubectl wait --for=condition=Ready pod -l app=postgres-db -n default
