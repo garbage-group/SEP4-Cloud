@@ -59,6 +59,7 @@ jobs:
         if: success()
         run: |
           kubectl apply -f ./k8s-deployment.yaml
+          kubectl get pods --show-labels
           kubectl wait --for=condition=Ready pod -l app=garbage-backend -n default
           kubectl wait --for=condition=Ready pod -l app=postgres-db -n default
           kubectl get all
