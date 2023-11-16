@@ -59,7 +59,7 @@ spec:
       containers:
         - name: garbage-backend
           image: zythaarcz/garbage-backend-develop:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           volumeMounts: # This is to attach a volume to a pod in a container (with the springboot app)
