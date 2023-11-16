@@ -1,28 +1,51 @@
 package garbagegroup.cloud.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class Humidity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(columnDefinition = "bigint")
-    private Long id;
+    @ManyToOne
+    @JoinColumn(name = "bin_id", nullable = false)
+    @JsonManagedReference
+    @JsonIgnore()
+    private Bin bin;
 
-    // Need to add the other attributes regarding humidity
+    private double value;
+    @Id
+    private LocalDateTime dateTime;
 
-    /**
-     * Empty constructor for springboot, it uses it when creating the repository
-     * Please never delete/modify this, just create a new constructor if you need one
-     */
-    public Humidity () {}
-
-
-    public void setId(Long id) {
-        this.id = id;
+    public Humidity() {
     }
 
-    public Long getId() {
-        return id;
+    public Humidity(Bin bin, double value, LocalDateTime dateTime) {
+        this.bin = bin;
+        this.value = value;
+        this.dateTime = dateTime;
+    }
+
+    public Bin getBin() {
+        return bin;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
     }
 }
