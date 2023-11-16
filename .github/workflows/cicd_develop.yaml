@@ -79,6 +79,9 @@ jobs:
           echo "Describing deployments..."
           kubectl describe deployments
 
+      - name: Check kubectl events
+        if: success()
+        run: kubectl get events --sort-by='.lastTimestamp'
 
       - name: Capture Kubernetes Logs
         if: success()
