@@ -67,6 +67,19 @@ jobs:
           echo "Checking deployments..."
           kubectl get deployments
 
+      - name: Check Pods
+        if: success()
+        run: |
+          echo "Checking pods..."
+          kubectl get pods
+
+      - name: Describe Deployments
+        if: success()
+        run: |
+          echo "Describing deployments..."
+          kubectl describe deployments
+
+
       - name: Capture Kubernetes Logs
         if: success()
         run: |
