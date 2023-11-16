@@ -1,5 +1,7 @@
 package garbagegroup.cloud.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -8,21 +10,27 @@ import java.time.LocalDateTime;
 public class Humidity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(columnDefinition = "bigint")
-    private Long binId;
+    @ManyToOne
+    @JoinColumn(name = "bin_id", nullable = false)
+    @JsonManagedReference
+    @JsonIgnore()
+    private Bin bin;
+
     private double value;
+    @Id
     private LocalDateTime dateTime;
 
     public Humidity() {
     }
 
-    public Long getBinId() {
-        return binId;
+    public Humidity(Bin bin, double value, LocalDateTime dateTime) {
+        this.bin = bin;
+        this.value = value;
+        this.dateTime = dateTime;
     }
 
-    public void setBinId(Long binId) {
-        this.binId = binId;
+    public Bin getBin() {
+        return bin;
     }
 
     public double getValue() {

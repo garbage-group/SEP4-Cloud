@@ -1,5 +1,6 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.service.BinService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +27,13 @@ public class BinController {
     // handles cases where the humidity is present or not,
     // and logs and returns an error response in case of an exception.
     @GetMapping("/{id}/humidity")
-    public ResponseEntity<Double> getCurrentHumidityByBinId(@PathVariable Long id) {
+    public ResponseEntity<Humidity> getCurrentHumidityByBinId(@PathVariable Long id) {
         try {
-            Optional<Double> humidity = binService.getCurrentHumidityByBinId(id);
+            Optional<Humidity> humidity = binService.getCurrentHumidityByBinId(id);
 
             return humidity.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
