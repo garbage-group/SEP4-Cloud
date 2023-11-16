@@ -61,6 +61,12 @@ jobs:
           echo "apply yaml file"
           kubectl apply -f ./k8s-deployment.yaml
 
+      - name: Check Deployments
+        if: success()
+        run: |
+          echo "Checking deployments..."
+          kubectl get deployments
+
       - name: Capture Kubernetes Logs
         if: success()
         run: |
