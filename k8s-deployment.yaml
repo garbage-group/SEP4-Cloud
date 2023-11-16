@@ -64,10 +64,43 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
-          env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-db-service:5432/postgres-db
-            - name: DATABASE_USER
-              value: postgres_username
-            - name: DATABASE_PASSWORD
-              value: postgres_password
+          volumeMounts: # This is to attach a volume to a pod in a container (with the springboot app)
+            - name: config-volume # Specifies the name of the volume
+              mountPath: /config # Specifies the path within the container where the ConfigMap should be mounted
+            - name: secret-volume
+              mountPath: /secrets # Specifies the path within the container where the Secret data should be mounted
+      restartPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: springboot-config
+        - name: secret-volume
+          secret:
+            secretName: postgresql-credentials
+---
+# ConfigMap for the DB credentials
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springboot-config
+data:
+  application.properties: |
+    spring.jpa.database=POSTGRESQL
+    spring.datasource.url=jdbc:postgresql://postgresql-service:5432/postgres-db   
+    spring.datasource.username=postgres_username
+    spring.datasource.password=postgres_password
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    spring.jpa.hibernate.ddl-auto=update
+    server.port=8080
+
+---
+# Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgresql-credentials
+type: Opaque
+data:
+  username: postgres_username # Base64-encoded 'postgres'
+  password: postgres_password # Base64-encoded 'bobs'
