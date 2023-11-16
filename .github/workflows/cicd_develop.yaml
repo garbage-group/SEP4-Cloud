@@ -60,8 +60,8 @@ jobs:
         run: |
           echo "apply yaml file"
           kubectl apply -f ./k8s-deployment.yaml
-          kubectl get pods --show-labels
-          kubectl wait --for=condition=Ready pod -l app: garbage-backend -n default
-          kubectl wait --for=condition=Ready pod -l app: postgres-db -n default
+          kubectl get all
+          kubectl wait --for=condition=Ready pod -l app:garbage-backend -n default
+          kubectl wait --for=condition=Ready pod -l app:postgres-db -n default
           kubectl get all
           kubectl rollout status deployment/garbage-backend
