@@ -1,49 +1,50 @@
 package garbagegroup.cloud.tcpserver;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 
-
-public class ServerSocketHandler implements Runnable
-{
+public class ServerSocketHandler implements Runnable {
   private int deviceId;
   private Socket socket;
-  private ObjectInputStream inFromClient;
-  private ObjectOutputStream outToClient;
-
+  private InputStream inFromClient;
+  private OutputStream outToClient;
 
   public ServerSocketHandler(int deviceId, Socket socket) {
     this.deviceId = deviceId;
     this.socket = socket;
     try {
-      inFromClient = new ObjectInputStream(socket.getInputStream());
-      outToClient = new ObjectOutputStream(socket.getOutputStream());
-    }
-    catch (IOException e) {
+      outToClient = socket.getOutputStream();
+      inFromClient = socket.getInputStream();
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
-  @Override public void run() {}
+  @Override
+  public void run() {
+    // Your handling logic here
+  }
 
   public String sendMessage(String message) {
     try {
       System.out.println("Sending " + message + " to device with ID: " + deviceId);
-      outToClient.writeObject(message);
+      outToClient.write(message.getBytes());
       outToClient.flush();
 
-      // Just wait for the response
-      String response = (String) inFromClient.readObject();
+      // Read response
+      byte[] buffer = new byte[1024];
+      int bytesRead = inFromClient.read(buffer);
+      String response = new String(buffer, 0, bytesRead);
+
       System.out.println("Received response from device with ID " + deviceId + ": " + response);
       return response;
-    }
-    catch (IOException | ClassNotFoundException e) {
+    } catch (IOException e) {
       System.out.println("Error sending/receiving message with device ID: " + deviceId);
       return "Client with an ID: " + deviceId + " disconnected";
     }
   }
 
-  public int getDeviceId() { return deviceId; }
+  public int getDeviceId() {
+    return deviceId;
+  }
 }

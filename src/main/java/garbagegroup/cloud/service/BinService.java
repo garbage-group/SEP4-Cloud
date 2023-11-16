@@ -81,6 +81,7 @@ public class BinService implements IBinService {
     }
 
     public synchronized void handleIoTData(int deviceId, String data) {
+        System.out.println("The received stuff is: " + data);
         String prefix = data.substring(0, Math.min(data.length(), 5));
 
         if (prefix.equals("humid")) {
@@ -92,8 +93,15 @@ public class BinService implements IBinService {
     }
 
     private synchronized LocalDateTime parseDateTime(String dateTimeString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy:HH:mm:ss");
-        return LocalDateTime.parse(dateTimeString, formatter);
+        String[] parts = dateTimeString.split(":");
+        if (parts.length >= 4) {
+            String dateString = parts[0] + " " + parts[1] + ":" + parts[2] + ":" + parts[3]; // Combine date parts
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm:ss");
+            return LocalDateTime.parse(dateString, formatter);
+        } else {
+            // Handle invalid or incomplete data
+            throw new IllegalArgumentException("Invalid date-time format");
+        }
     }
 
 

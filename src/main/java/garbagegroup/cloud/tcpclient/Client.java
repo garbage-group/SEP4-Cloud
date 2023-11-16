@@ -1,24 +1,22 @@
 package garbagegroup.cloud.tcpclient;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class Client {
-    private ObjectOutputStream outToServer;
-    private ObjectInputStream inFromServer;
+    private OutputStream outToServer;
+    private InputStream inFromServer;
 
     public void startClient() {
         try{
             Socket socket = new Socket("localhost", 2910);
             System.out.println("Connected to the server");
 
-            outToServer = new ObjectOutputStream(socket.getOutputStream());
-            inFromServer = new ObjectInputStream(socket.getInputStream());
+            outToServer = socket.getOutputStream();
+            inFromServer = socket.getInputStream();
 
             Thread t = new Thread(this::listenToMessages);
             t.setDaemon(true);
@@ -27,9 +25,9 @@ public class Client {
             Scanner scanner = new Scanner(System.in);
 
             while (true) {
-                //System.out.println("Please type message >");
                 String scanned = scanner.nextLine();
-                outToServer.writeObject(scanned);
+                outToServer.write(scanned.getBytes());
+                outToServer.flush();
 
                 if (scanned.equalsIgnoreCase("exit")) {
                     socket.close();
@@ -37,8 +35,6 @@ public class Client {
                     break;
                 }
             }
-
-
 
         } catch(IOException e){
             e.printStackTrace();
@@ -49,7 +45,10 @@ public class Client {
         while(true){
             try
             {
-                String result = (String) inFromServer.readObject();
+                // Read response
+                byte[] buffer = new byte[1024];
+                int bytesRead = inFromServer.read(buffer);
+                String result = new String(buffer, 0, bytesRead);
                 System.out.println("Client received: " + result);
                 if (result.equals("getHumidity")) {
                     LocalDateTime currentDateTime = LocalDateTime.now();
@@ -58,11 +57,12 @@ public class Client {
                     // Format the current date and time using the formatter
                     String formattedDateTime = currentDateTime.format(formatter);
 
-                    outToServer.writeObject("humid:25.0:" +formattedDateTime);
+
+                    outToServer.write(("humid:25.0:" +formattedDateTime).getBytes());
                     outToServer.flush();
                 }
             }
-            catch (IOException | ClassNotFoundException e)
+            catch (IOException e)
             {
                 e.printStackTrace();
             }
