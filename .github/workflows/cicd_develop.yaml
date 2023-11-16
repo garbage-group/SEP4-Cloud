@@ -60,6 +60,7 @@ jobs:
         run: |
           echo "apply yaml file"
           kubectl apply -f ./k8s-deployment.yaml
+          kubectl rollout status deployment/garbage-backend
 
       - name: Check Deployments
         if: success()
