@@ -67,16 +67,11 @@ spec:
           volumeMounts: # This is to attach a volume to a pod in a container (with the springboot app)
             - name: config-volume # Specifies the name of the volume
               mountPath: /config # Specifies the path within the container where the ConfigMap should be mounted
-            - name: secret-volume
-              mountPath: /secrets # Specifies the path within the container where the Secret data should be mounted
       restartPolicy: Always
       volumes:
         - name: config-volume
           configMap:
             name: springboot-config
-        - name: secret-volume
-          secret:
-            secretName: postgresql-credentials
 ---
 # ConfigMap for the DB credentials
 apiVersion: v1
@@ -94,13 +89,4 @@ data:
     spring.jpa.hibernate.ddl-auto=update
     server.port=8080
 
----
-# Secret
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgresql-credentials
-type: Opaque
-data:
-  username: postgres_username # Base64-encoded 'postgres'
-  password: postgres_password # Base64-encoded 'bobs'
+
