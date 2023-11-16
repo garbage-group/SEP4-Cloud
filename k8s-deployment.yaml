@@ -60,16 +60,14 @@ spec:
     spec:
       containers:
         - name: garbage-backend
-          image: garbage-backend-develop:latest
+          image: zythaarcz/garbage-backend-develop:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://localhost:5432/postgres-db
+              value: jdbc:postgresql://postgres-db-service:5432/postgres-db
             - name: DATABASE_USER
               value: postgres_username
             - name: DATABASE_PASSWORD
               value: postgres_password
-      imagePullSecrets:
-        - name: regcred
