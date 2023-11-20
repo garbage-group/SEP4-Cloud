@@ -2,7 +2,7 @@ name: Develop Branch Push or Merge and Image Build
 
 on:
   push:
-    branches: [ "develop", "14-set-up-cicd-pipeline" ]
+    branches: [ "develop" ]
   pull_request:
     branches: [ "develop" ]
 

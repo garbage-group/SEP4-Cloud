@@ -2,7 +2,7 @@ name: Main Branch Push or Merge and Image Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" , "14-set-up-cicd-pipeline"]
   pull_request:
     branches: [ "main" ]
 
@@ -33,4 +33,28 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Push to Docker Hub
-        run: docker push zythaarcz/garbage-backend:latest
+        run: docker push zythaarcz/garbage-backend-develop:latest
+
+      - name: Pull image from Docker Hub
+        if: success()
+        run: |
+          docker pull zythaarcz/garbage-backend-develop:latest
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Login
+        run: |
+          az login --username ${{ secrets.AZURE_USERNAME }} --password ${{ secrets.AZURE_PASSWORD }}
+        env:
+          AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials --name SEP4-backend --resource-group SEP4 --admin
+
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/garbage-backend
