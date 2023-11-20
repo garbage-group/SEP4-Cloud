@@ -58,7 +58,7 @@ spec:
     spec:
       containers:
         - name: garbage-backend
-          image: zythaarcz/garbage-backend-develop:latest
+          image: zythaarcz/garbage-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
