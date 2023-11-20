@@ -2,7 +2,7 @@ name: Main Branch Push or Merge and Image Build
 
 on:
   push:
-    branches: [ "main" , "14-set-up-cicd-pipeline"]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
