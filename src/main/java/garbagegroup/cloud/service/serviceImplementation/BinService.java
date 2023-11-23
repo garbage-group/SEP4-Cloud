@@ -1,8 +1,9 @@
-package garbagegroup.cloud.service;
+package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.repository.BinRepository;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.springframework.beans.factory.annotation.Autowired;
 import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
