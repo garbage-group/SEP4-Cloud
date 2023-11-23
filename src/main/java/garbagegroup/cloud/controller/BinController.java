@@ -39,5 +39,6 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
 }
 

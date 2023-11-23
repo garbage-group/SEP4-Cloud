@@ -30,9 +30,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
+        System.out.println("authorizationHeader = " + authorizationHeader);
+
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
+
             return;
         }
         jwt = authorizationHeader.substring(7);

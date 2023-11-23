@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.function.Function;
@@ -30,7 +31,7 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSignInKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(getSignInKey().getEncoded()).build().parseClaimsJws(token).getBody();
     }
 
     private Key getSignInKey() {
@@ -53,7 +54,9 @@ public class JwtService {
     public String generateToken(User userDetails) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DATE, 30);
-        Date expirationDate = calendar.getTime();
+        LocalDate localDate = LocalDate.now().plusDays(1);
+        Date expirationDate = Date.from(localDate.atStartOfDay().atZone(calendar.getTimeZone().toZoneId()).toInstant());
+
 
 
         Claims claims = Jwts.claims();

@@ -13,32 +13,34 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 @Service
 public class UserService implements IUserService {
 
     private final JwtService jwtService;
     private UserRepository userRepository;
-    private final List<UserDto> store;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+
 
 
     @Autowired
-    public UserService(UserRepository userRepository, JwtService jwtService) {
-        this.userRepository = userRepository;
+    public UserService(JwtService jwtService, UserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
-        // Initialize store here
-        this.store = new ArrayList<>();
-        this.store.add(new UserDto("municipalityWorker", "municipalityWorker", "municipalityWorker", "municipalityWorker"));
-        // Add more users to the store if needed
+        this.userRepository = userRepository;
+        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
+
+//        User user = new User("admin", "admin", "admin", "admin");
+//        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
+//        userRepository.save(user);
     }
 
     @Override
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
+            System.out.println("from service"+user.getUsername());
             return user;
         } else {
             throw new RuntimeException("User with username " + username + " not found");
@@ -47,24 +49,19 @@ public class UserService implements IUserService {
 
     public AuthenticationResponse authenticate(UserDto request) {
 
-        System.out.println(request.getUsername());
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
+        );
+        var user = userRepository.findByUsername(request.getUsername());
 
-        UserDto userFromDb = store.stream().
-                filter(user -> user.getUsername()
-                        .equals(request.getUsername())
-                ).findFirst().orElseThrow(() -> new RuntimeException("User not found"));
-
-        User user = new User();
-        user.setUsername(userFromDb.getUsername());
-        System.out.println(userFromDb.getUsername());
-        user.setPassword(userFromDb.getPassword());
-        user.setFullname(userFromDb.getFullname());
-        user.setRole(userFromDb.getRole());
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
-
     }
+
 
 }

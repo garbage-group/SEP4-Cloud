@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 
 @CrossOrigin
@@ -30,27 +32,35 @@ public class UserController {
 
 
     @GetMapping("/{username}")
-    public ResponseEntity<User> fetchUserByUsername(@PathVariable("username") String username) {
+    public ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("username") String username) {
         try {
             User user = userService.fetchUserByUsername(username);
-            System.out.println(user.getUsername());
-            return new ResponseEntity<>(user, HttpStatus.OK);
+            UserDto userDto = convertToUserDto(user);
+            return new ResponseEntity<>(userDto, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+    }
+
+    // Helper method to convert User entity to UserDto
+    private UserDto convertToUserDto(User user) {
+        UserDto userDto = new UserDto();
+        userDto.setUsername(user.getUsername());
+        userDto.setPassword(user.getPassword());
+        userDto.setRole(user.getRole());
+        userDto.setFullname(user.getFullname());
+        return userDto;
     }
 
     @PostMapping("/users/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody UserDto request) {
         try {
-            System.out.println(request.getUsername());
             return ResponseEntity.ok(service.authenticate(request));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
-
 
 
 }
