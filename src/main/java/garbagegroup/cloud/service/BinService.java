@@ -86,23 +86,9 @@ public class BinService implements IBinService {
 
         if (prefix.equals("humid")) {
             String res = data.substring(6);
-            double humidity = Double.parseDouble(res.substring(0, res.indexOf(":")));
-            LocalDateTime dateTime = parseDateTime(res.substring(res.indexOf(":") + 1));
+            double humidity = Double.parseDouble(res);
+            LocalDateTime dateTime = LocalDateTime.now();
             saveHumidityById(deviceId, humidity, dateTime);
         }
     }
-
-    private synchronized LocalDateTime parseDateTime(String dateTimeString) {
-        String[] parts = dateTimeString.split(":");
-        if (parts.length >= 4) {
-            String dateString = parts[0] + " " + parts[1] + ":" + parts[2] + ":" + parts[3]; // Combine date parts
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm:ss");
-            return LocalDateTime.parse(dateString, formatter);
-        } else {
-            // Handle invalid or incomplete data
-            throw new IllegalArgumentException("Invalid date-time format");
-        }
-    }
-
-
 }

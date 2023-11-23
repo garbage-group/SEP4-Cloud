@@ -3,7 +3,7 @@ package garbagegroup.cloud.tcpserver;
 import java.io.*;
 import java.net.Socket;
 
-public class ServerSocketHandler implements Runnable {
+public class ServerSocketHandler {
   private int deviceId;
   private Socket socket;
   private InputStream inFromClient;
@@ -18,11 +18,6 @@ public class ServerSocketHandler implements Runnable {
     } catch (IOException e) {
       e.printStackTrace();
     }
-  }
-
-  @Override
-  public void run() {
-    // Your handling logic here
   }
 
   public String sendMessage(String message) {
