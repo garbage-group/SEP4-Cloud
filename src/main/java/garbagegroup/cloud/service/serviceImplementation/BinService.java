@@ -2,28 +2,26 @@ package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.repository.BinRepository;
+import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
+import garbagegroup.cloud.tcpserver.ITCPServer;
 import org.springframework.beans.factory.annotation.Autowired;
-import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class BinService implements IBinService {
-    TCPServer tcpServer;
-    private BinRepository binRepository;
+    ITCPServer tcpServer;
+    private IBinRepository binRepository;
 
     @Autowired
-    public BinService(BinRepository binRepository) {
+    public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
-        tcpServer = new TCPServer();
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
@@ -77,7 +75,7 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public void setTCPServer(TCPServer tcpServer) {
+    public void setTCPServer(ITCPServer tcpServer) {
         this.tcpServer = tcpServer;
     }
 
@@ -87,23 +85,9 @@ public class BinService implements IBinService {
 
         if (prefix.equals("humid")) {
             String res = data.substring(6);
-            double humidity = Double.parseDouble(res.substring(0, res.indexOf(":")));
-            LocalDateTime dateTime = parseDateTime(res.substring(res.indexOf(":") + 1));
+            double humidity = Double.parseDouble(res);
+            LocalDateTime dateTime = LocalDateTime.now();
             saveHumidityById(deviceId, humidity, dateTime);
         }
     }
-
-    private synchronized LocalDateTime parseDateTime(String dateTimeString) {
-        String[] parts = dateTimeString.split(":");
-        if (parts.length >= 4) {
-            String dateString = parts[0] + " " + parts[1] + ":" + parts[2] + ":" + parts[3]; // Combine date parts
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy HH:mm:ss");
-            return LocalDateTime.parse(dateString, formatter);
-        } else {
-            // Handle invalid or incomplete data
-            throw new IllegalArgumentException("Invalid date-time format");
-        }
-    }
-
-
 }
