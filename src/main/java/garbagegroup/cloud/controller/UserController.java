@@ -35,21 +35,11 @@ public class UserController {
     public ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("username") String username) {
         try {
             User user = userService.fetchUserByUsername(username);
-            UserDto userDto = convertToUserDto(user);
+            UserDto userDto = service.convertToUserDto(user); // Call the convertToUserDto method from UserService
             return new ResponseEntity<>(userDto, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-    }
-
-    // Helper method to convert User entity to UserDto
-    private UserDto convertToUserDto(User user) {
-        UserDto userDto = new UserDto();
-        userDto.setUsername(user.getUsername());
-        userDto.setPassword(user.getPassword());
-        userDto.setRole(user.getRole());
-        userDto.setFullname(user.getFullname());
-        return userDto;
     }
 
     @PostMapping("/users/authenticate")

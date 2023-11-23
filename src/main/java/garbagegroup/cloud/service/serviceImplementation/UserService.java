@@ -36,6 +36,16 @@ public class UserService implements IUserService {
 //        userRepository.save(user);
     }
 
+    public UserDto convertToUserDto(User user) {
+        UserDto userDto = new UserDto();
+        userDto.setUsername(user.getUsername());
+        userDto.setPassword(user.getPassword()); // Ensure this is safe or consider not including passwords in DTOs
+        userDto.setRole(user.getRole());
+        userDto.setFullname(user.getFullname());
+
+        return userDto;
+    }
+
     @Override
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
