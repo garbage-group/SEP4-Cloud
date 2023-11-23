@@ -34,7 +34,7 @@ public class TCPServer implements ITCPServer, Runnable {
                 Socket clientSocket = serverSocket.accept();
 
                 // Create a new thread to handle the client connection
-                socketHandler = new ServerSocketHandler(1, clientSocket);
+                socketHandler = new ServerSocketHandler(generateId(), clientSocket);
                 IoTDevices.add(socketHandler);
                 new Thread(socketHandler).start();
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
