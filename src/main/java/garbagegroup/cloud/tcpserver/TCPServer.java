@@ -1,11 +1,14 @@
 package garbagegroup.cloud.tcpserver;
 
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class TCPServer implements ITCPServer, Runnable {
     private static int nextId = 1;
     private ServerSocket serverSocket;
@@ -42,6 +45,7 @@ public class TCPServer implements ITCPServer, Runnable {
         }
     }
 
+    @Override
     public void startServer() {
         new Thread(this).start();
     }
