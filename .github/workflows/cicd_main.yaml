@@ -36,21 +36,30 @@ jobs:
       - name: Push to Docker Hub
         run: docker push zythaarcz/garbage-backend:latest
 
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
       - name: Pull image from Docker Hub
-        if: success()
         run: |
           docker pull zythaarcz/garbage-backend:latest
 
-      - name: Log in to Google Cloud
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          project_id: handy-parity-406210
+      - name: Tag image for GCR
+        run: docker tag zythaarcz/garbage-backend:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
 
-      - name: Deploy to Google Cloud Run
+      - name: Push image to GCR
+        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
+
+      - name: Trigger Deployment in Google Cloud Deploy
         run: |
-          gcloud run deploy garbage-backend-service \
-            --image zythaarcz/garbage-backend:latest \
-            --platform managed \
-            --region europe-west3 \
-            --allow-unauthenticated
+          gcloud config set project SEP4
+          gcloud run deploy releases create \
+          --region=europe-west3 \
+          --delivery-pipeline=sep4-pipeline \
+          --images=garbage-backend=gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
