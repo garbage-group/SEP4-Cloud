@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: garbage-backend
-          image: zythaarcz/garbage-backend:latest
+          image: zythaarcz/garbage-backend-develop:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -51,7 +51,7 @@ metadata:
 data:
   application.properties: |
     spring.jpa.database=POSTGRESQL
-    spring.datasource.url=jdbc:postgresql://garbage-db.postgres.database.azure.com:5432/garbage_db
+    spring.datasource.url=jdbc:postgresql://garbage-db.postgres.database.azure.com:5432/garbage_db 
     spring.datasource.username=garbage_username_123
     spring.datasource.password=grbgpswrd123#
     spring.datasource.driver-class-name=org.postgresql.Driver

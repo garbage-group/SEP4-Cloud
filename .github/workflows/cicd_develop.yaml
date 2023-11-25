@@ -1,4 +1,4 @@
-name: Develop Branch Push or Merge and Image Build
+name: Develop Branch Push or Pull request - Create development image and deploy to Minikube
 
 on:
   push:
@@ -59,7 +59,7 @@ jobs:
         if: success()
         run: |
           echo "apply yaml file"
-          kubectl apply -f ./k8s-deployment.yaml
+          kubectl apply -f ./k8s-deployment-develop.yaml
           kubectl rollout status deployment/garbage-backend
 
       - name: Check Deployments
