@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,7 +58,7 @@ jobs:
 
       - name: Trigger Deployment in Google Cloud Deploy
         run: |
-          gcloud config set project SEP4
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           gcloud run deploy releases create \
           --region=europe-west3 \
           --delivery-pipeline=sep4-pipeline \
