@@ -63,4 +63,5 @@ jobs:
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest \
             --platform managed \
             --region europe-west3 \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --service-account sep4-account@handy-parity-406210.iam.gserviceaccount.com
