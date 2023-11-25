@@ -62,4 +62,4 @@ jobs:
           gcloud run deploy releases create \
           --region=europe-west3 \
           --delivery-pipeline=sep4-pipeline \
-          --images=garbage-backend=gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
+          --image=garbage-backend=gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
