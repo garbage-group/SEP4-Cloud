@@ -42,7 +42,7 @@ jobs:
           docker pull zythaarcz/garbage-backend:latest
 
       - name: Log in to Google Cloud
-        uses: google-github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@v1
         with:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: handy-parity-406210
