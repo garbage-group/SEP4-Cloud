@@ -2,7 +2,7 @@ name: Main Branch Push or Pull request - Create main image and deploy to AKS
 
 on:
   push:
-    branches: [ "main" , "14-set-ip-cicd-pipeline"]
+    branches: [ "main" , "14-set-up-cicd-pipeline"]
   pull_request:
     branches: [ "main" ]
 
