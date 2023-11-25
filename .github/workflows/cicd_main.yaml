@@ -1,4 +1,4 @@
-name: Main Branch Push or Pull request - Create main image and deploy to AKS
+name: Main Branch Push or Pull request - Create main image and deploy to Google Cloud
 
 on:
   push:
