@@ -66,4 +66,8 @@ public class TCPServer implements ITCPServer, Runnable {
         }
         return response;
     }
+
+    public List<ServerSocketHandler> getIoTDevices() {
+        return IoTDevices;
+    }
 }
