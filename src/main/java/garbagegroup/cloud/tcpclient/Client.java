@@ -54,6 +54,10 @@ public class Client {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
                 }
+                else if (result.equals("getStatus")) {
+                    outToServer.write("3456".getBytes());
+                    outToServer.flush();
+                }
             }
             catch (IOException e)
             {

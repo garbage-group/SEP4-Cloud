@@ -63,7 +63,6 @@ public class BinService implements IBinService {
     }
 
 
-
     @Override
     public synchronized void saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
         System.out.println("About to save humidity: " + humidity + " with date and time: " + dateTime + " to bin with ID: " + binId);
@@ -104,7 +103,7 @@ public class BinService implements IBinService {
      * Online device - if there is an online device that is not connected to a bin, this device is assigned to the bin
      * Fake device - if there is no online device available, a fake device is created and assigned to the bin, as well as fake data in the DB
      * @param binDTO
-     * @return
+     * @return create bin
      */
     @Override
     public Bin create(CreateBinDTO binDTO) {
@@ -120,15 +119,15 @@ public class BinService implements IBinService {
             loadFakeIoTDeviceData(newBin.getId().intValue());
         }
         else {
-            createdBin.setDeviceId(deviceId);
-            createdBin = binRepository.save(createdBin);
+            newBin.setDeviceId(deviceId);
+            createdBin = binRepository.save(newBin);
         }
         return createdBin;
     }
 
     /**
      * This function returns an online IoT device that does not belong to any bin
-     * @return
+     * @return deviceId of the available device
      */
     @Override
     public int getAvailableDevice() {
@@ -158,6 +157,4 @@ public class BinService implements IBinService {
         saveHumidityById(binId, 32.0, LocalDateTime.now());
         saveHumidityById(binId, 33.0, LocalDateTime.now());
     }
-
-
 }

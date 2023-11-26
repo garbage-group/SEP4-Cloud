@@ -9,8 +9,7 @@ public class ServerSocketHandler {
   private InputStream inFromClient;
   private OutputStream outToClient;
 
-  public ServerSocketHandler(int deviceId, Socket socket) {
-    this.deviceId = deviceId;
+  public ServerSocketHandler(Socket socket) {
     this.socket = socket;
     try {
       outToClient = socket.getOutputStream();
@@ -41,5 +40,9 @@ public class ServerSocketHandler {
 
   public int getDeviceId() {
     return deviceId;
+  }
+
+  public void setDeviceId(int deviceId) {
+    this.deviceId = deviceId;
   }
 }
