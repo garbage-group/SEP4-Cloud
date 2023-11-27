@@ -42,8 +42,9 @@
             <version>3.1.5</version>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.7.0</version> <!-- Use the latest version available -->
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -1,11 +1,14 @@
 package garbagegroup.cloud.tcpserver;
 
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class TCPServer implements ITCPServer, Runnable {
     private static int nextId = 1;
     private ServerSocket serverSocket;
@@ -33,8 +36,6 @@ public class TCPServer implements ITCPServer, Runnable {
                 // Create a new thread to handle the client connection
                 socketHandler = new ServerSocketHandler(generateId(), clientSocket);
                 IoTDevices.add(socketHandler);
-                new Thread(socketHandler).start();
-
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
@@ -43,6 +44,7 @@ public class TCPServer implements ITCPServer, Runnable {
         }
     }
 
+    @Override
     public void startServer() {
         new Thread(this).start();
     }

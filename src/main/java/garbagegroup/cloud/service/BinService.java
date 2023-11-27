@@ -2,7 +2,8 @@ package garbagegroup.cloud.service;
 
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.repository.BinRepository;
+import garbagegroup.cloud.repository.IBinRepository;
+import garbagegroup.cloud.tcpserver.ITCPServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
@@ -14,15 +15,14 @@ import java.util.*;
 
 @Service
 public class BinService implements IBinService {
-    TCPServer tcpServer;
-    private BinRepository binRepository;
+    ITCPServer tcpServer;
+    private IBinRepository binRepository;
 
     @Autowired
-    public BinService(BinRepository binRepository) {
+    public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
-        tcpServer = new TCPServer();
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
@@ -76,25 +76,19 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public void setTCPServer(TCPServer tcpServer) {
+    public void setTCPServer(ITCPServer tcpServer) {
         this.tcpServer = tcpServer;
     }
 
     public synchronized void handleIoTData(int deviceId, String data) {
+        System.out.println("The received stuff is: " + data);
         String prefix = data.substring(0, Math.min(data.length(), 5));
 
         if (prefix.equals("humid")) {
             String res = data.substring(6);
-            double humidity = Double.parseDouble(res.substring(0, res.indexOf(":")));
-            LocalDateTime dateTime = parseDateTime(res.substring(res.indexOf(":") + 1));
+            double humidity = Double.parseDouble(res);
+            LocalDateTime dateTime = LocalDateTime.now();
             saveHumidityById(deviceId, humidity, dateTime);
         }
     }
-
-    private synchronized LocalDateTime parseDateTime(String dateTimeString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy:HH:mm:ss");
-        return LocalDateTime.parse(dateTimeString, formatter);
-    }
-
-
 }
