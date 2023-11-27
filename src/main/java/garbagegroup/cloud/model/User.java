@@ -1,9 +1,11 @@
 package garbagegroup.cloud.model;
 
 import jakarta.persistence.*;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.validation.constraints.Size;
 import java.util.Collection;
 
 @Entity
@@ -11,9 +13,15 @@ import java.util.Collection;
 public class User implements UserDetails {
     @Id
     private String username;
+
+    @NonNull
+    @Size(min = 8, max = 10, message = "Password length must be between 8 and 10 characters")
     private String password;
+
+    @NonNull
     private String fullname;
 
+    @NonNull
     private String role;
 
     private String region;
@@ -29,7 +37,6 @@ public class User implements UserDetails {
         this.role = role;
         this.region=region;
     }
-
 
 
     public String getUsername() {
