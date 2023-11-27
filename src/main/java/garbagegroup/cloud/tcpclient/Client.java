@@ -51,14 +51,11 @@ public class Client {
                 String result = new String(buffer, 0, bytesRead);
                 System.out.println("Client received: " + result);
                 if (result.equals("getHumidity")) {
-                    LocalDateTime currentDateTime = LocalDateTime.now();
-                    // Define the desired format
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy:HH:mm:ss");
-                    // Format the current date and time using the formatter
-                    String formattedDateTime = currentDateTime.format(formatter);
-
-
-                    outToServer.write(("humid:25.0:" +formattedDateTime).getBytes());
+                    outToServer.write(("humid:25.0").getBytes());
+                    outToServer.flush();
+                }
+                else if (result.equals("getStatus")) {
+                    outToServer.write("3456".getBytes());
                     outToServer.flush();
                 }
             }

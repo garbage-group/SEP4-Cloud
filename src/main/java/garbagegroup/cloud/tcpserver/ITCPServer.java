@@ -1,8 +1,9 @@
 package garbagegroup.cloud.tcpserver;
 
-import org.springframework.stereotype.Component;
+import java.util.List;
 
 public interface ITCPServer {
     public String getHumidityById(int deviceId);
     void startServer();
+    public List<ServerSocketHandler> getIoTDevices();
 }

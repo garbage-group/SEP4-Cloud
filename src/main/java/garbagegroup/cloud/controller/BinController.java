@@ -1,7 +1,8 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.service.BinService;
 import garbagegroup.cloud.service.IBinService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,5 +41,17 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+    @PostMapping
+    public ResponseEntity<Bin> createBin(@RequestBody CreateBinDTO binDTO) {
+        try {
+            Bin createdBin = binService.create(binDTO);
+            return new ResponseEntity<>(createdBin, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
 
