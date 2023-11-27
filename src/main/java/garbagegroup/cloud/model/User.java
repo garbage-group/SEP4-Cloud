@@ -38,7 +38,6 @@ public class User implements UserDetails {
         this.region=region;
     }
 
-
     public String getUsername() {
         return username;
     }
