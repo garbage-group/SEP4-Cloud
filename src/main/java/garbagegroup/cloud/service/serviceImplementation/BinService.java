@@ -1,16 +1,15 @@
-package garbagegroup.cloud.service;
+package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.repository.IBinRepository;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import org.springframework.beans.factory.annotation.Autowired;
-import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service

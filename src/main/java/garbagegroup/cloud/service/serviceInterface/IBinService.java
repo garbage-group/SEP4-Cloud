@@ -1,4 +1,4 @@
-package garbagegroup.cloud.service;
+package garbagegroup.cloud.service.serviceInterface;
 
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.tcpserver.ITCPServer;

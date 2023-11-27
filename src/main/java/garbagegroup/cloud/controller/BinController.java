@@ -1,8 +1,7 @@
 package garbagegroup.cloud.controller;
 
 import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.service.BinService;
-import garbagegroup.cloud.service.IBinService;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,5 +39,6 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
 }
 
