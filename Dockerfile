@@ -16,5 +16,8 @@ COPY --from=builder spring-boot-loader/ ./
 COPY --from=builder snapshot-dependencies/ ./
 COPY --from=builder application/ ./
 
+# Expose port 8080
+EXPOSE 8080
+
 #Run the application
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
