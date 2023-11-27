@@ -2,7 +2,7 @@ name: Main Branch Push or Pull request - Create main image and deploy to Google 
 
 on:
   push:
-    branches: [ "main" , "14-set-up-cicd-pipeline"]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -51,12 +51,14 @@ jobs:
           docker pull zythaarcz/garbage-backend:latest
 
       - name: Tag image for GCR
+        if: success()
         run: docker tag zythaarcz/garbage-backend:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
 
       - name: Push image to GCR
         run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
 
-      - name: Trigger Deployment in Google Cloud Deploy
+      - name: Trigger Deployment in Google Cloud Run
+        if: success()
         run: |
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           gcloud run deploy garbage-backend-service \

@@ -1,4 +1,4 @@
-name: Develop Branch Push or Pull request - Create development image and deploy to Minikube
+name: Develop Branch Push or Pull request - Test and build development image
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "develop" ]
 
 jobs:
-  build-test:
+  build-test-image:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,66 +35,3 @@ jobs:
       - name: Push to Docker Hub
         run: docker push zythaarcz/garbage-backend-develop:latest
 
-      - name: Install Minikube
-        if: success()
-        run: |
-          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-          sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-      - name: Start Minikube
-        if: success()
-        run: minikube start
-
-      - name: Set Docker Env
-        if: success()
-        run: |
-          eval $(minikube docker-env --shell bash)
-
-      - name: Pull image from Docker Hub
-        if: success()
-        run: |
-          docker pull zythaarcz/garbage-backend-develop:latest
-
-      - name: Deploy to Kubernetes
-        if: success()
-        run: |
-          echo "apply yaml file"
-          kubectl apply -f ./k8s-deployment-develop.yaml
-          kubectl rollout status deployment/garbage-backend
-
-      - name: Check Deployments
-        if: success()
-        run: |
-          echo "Checking deployments..."
-          kubectl get deployments
-
-      - name: Check Pods
-        if: success()
-        run: |
-          echo "Checking pods..."
-          kubectl get pods
-
-      - name: Describe Deployments
-        if: success()
-        run: |
-          echo "Describing deployments..."
-          kubectl describe deployments
-
-      - name: Check kubectl events
-        if: success()
-        run: kubectl get events --sort-by='.lastTimestamp'
-
-      - name: Capture Kubernetes Logs
-        if: success()
-        run: |
-          kubectl logs -l app=garbage-backend > garbage-backend-logs.txt
-          kubectl logs -l app=postgres-db > postgres-db-logs.txt
-
-      - name: Upload Kubernetes Logs as Artifacts
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: kubernetes-logs
-          path: |
-            garbage-backend-logs.txt
-            postgres-db-logs.txt
