@@ -16,15 +16,18 @@ public class User implements UserDetails {
 
     private String role;
 
+    private String region;
+
     public User() {
     }
 
-    public User(String username, String password, String fullname, String role) {
+    public User(String username, String password, String fullname, String role, String region) {
 
         this.username = username;
         this.password = password;
         this.fullname = fullname;
         this.role = role;
+        this.region=region;
     }
 
 
@@ -84,5 +87,13 @@ public class User implements UserDetails {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
     }
 }

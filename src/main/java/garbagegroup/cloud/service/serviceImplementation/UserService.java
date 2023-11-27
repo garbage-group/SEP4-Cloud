@@ -5,7 +5,7 @@ import garbagegroup.cloud.dto.UserDto;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
-import garbagegroup.cloud.repository.UserRepository;
+import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,16 +18,16 @@ import org.springframework.stereotype.Service;
 public class UserService implements IUserService {
 
     private final JwtService jwtService;
-    private UserRepository userRepository;
+    private IUserRepository IUserRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
 
 
     @Autowired
-    public UserService(JwtService jwtService, UserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public UserService(JwtService jwtService, IUserRepository IUserRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
+        this.IUserRepository = IUserRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
 
@@ -48,7 +48,7 @@ public class UserService implements IUserService {
 
     @Override
     public User fetchUserByUsername(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = IUserRepository.findByUsername(username);
         if (user != null) {
             System.out.println("from service"+user.getUsername());
             return user;
@@ -65,7 +65,7 @@ public class UserService implements IUserService {
                         request.getPassword()
                 )
         );
-        var user = userRepository.findByUsername(request.getUsername());
+        var user = IUserRepository.findByUsername(request.getUsername());
 
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
