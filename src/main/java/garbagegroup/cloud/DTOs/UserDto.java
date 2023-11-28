@@ -1,4 +1,4 @@
-package garbagegroup.cloud.dto;
+package garbagegroup.cloud.DTOs;
 
 
 public class UserDto {

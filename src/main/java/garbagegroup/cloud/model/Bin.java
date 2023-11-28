@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 public class Bin {
@@ -39,8 +40,15 @@ public class Bin {
     @JsonIgnoreProperties("bin")
     private List<Humidity> humidity;
 
-    public Bin(){
+    public Bin() {}
 
+    public Bin(Double longitude, Double latitude, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.capacity = capacity;
+        this.fillThreshold = fillThreshold;
+        this.emptiedLast = emptiedLast;
+        this.pickUpTime = pickUpTime;
     }
 
     public Double getLongitude() {
