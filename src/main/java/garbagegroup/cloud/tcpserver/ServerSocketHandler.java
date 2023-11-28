@@ -48,4 +48,5 @@ public class ServerSocketHandler {
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
+
 }
