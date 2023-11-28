@@ -1,45 +1,30 @@
-package garbagegroup.cloud.dto;
+package garbagegroup.cloud.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import garbagegroup.cloud.model.Humidity;
+import garbagegroup.cloud.model.Level;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
 public class BinDto {
 
-
     private Long id;
-
     private Double longitude;
-
-
     private Double latitude;
-
-
     private Double capacity;
-
-
     private LocalDateTime emptiedLast;
-
-
     private LocalDateTime pickUpTime;
-
-
     private Double fillThreshold;
-
-
     private int deviceId;
-
     private List<Humidity> humidity;
+    private List<Level> fillLevels;
 
     public BinDto(){
-
     }
-    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity) {
+    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels) {
         this.id = id;
         this.longitude = longitude;
         this.latitude = latitude;
@@ -49,12 +34,12 @@ public class BinDto {
         this.fillThreshold = fillThreshold;
         this.deviceId = deviceId;
         this.humidity = humidity;
+        this.fillLevels = fillLevels;
     }
 
     public Double getLongitude() {
         return longitude;
     }
-
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
@@ -89,6 +74,15 @@ public class BinDto {
 
     public void setHumidity(List<Humidity> humidity) {
         this.humidity = humidity;
+    }
+
+    @OneToMany
+    public List<Level> getFillLevels() {
+        return fillLevels;
+    }
+
+    public void setFillLevels(List<Level> fillLevels) {
+        this.fillLevels = fillLevels;
     }
 
     public Double getCapacity() {

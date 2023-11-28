@@ -1,7 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-import garbagegroup.cloud.dto.BinDto;
-import garbagegroup.cloud.dto.DTOConverter;
+import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
@@ -21,12 +21,13 @@ import java.util.*;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
-    private DTOConverter dtoconverter;
+    private DTOConverter dtoConverter;
 
 
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
+        this.dtoConverter = new DTOConverter();
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
@@ -178,9 +179,9 @@ public class BinService implements IBinService {
     @Override
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
-        List<BinDto> binDtos = new ArrayList<>();
+        List<BinDto> binDtos = new ArrayList<BinDto>();
         for (Bin bin: bins) {
-            BinDto dto = dtoconverter.convertToBinDto(bin);
+            BinDto dto = dtoConverter.convertToBinDto(bin);
             binDtos.add(dto);
         }
         return binDtos;
@@ -191,7 +192,7 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = dtoconverter.convertToBinDto(bin);
+            BinDto binDto = dtoConverter.convertToBinDto(bin);
             return Optional.of(binDto);
         } else {
             return Optional.empty();

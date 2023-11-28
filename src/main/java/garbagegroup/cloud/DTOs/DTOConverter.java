@@ -1,4 +1,4 @@
-package garbagegroup.cloud.dto;
+package garbagegroup.cloud.DTOs;
 
 import garbagegroup.cloud.model.Bin;
 
@@ -17,6 +17,7 @@ public class DTOConverter {
         dto.setFillThreshold(bin.getFillThreshold());
         dto.setDeviceId(bin.getDeviceId());
         dto.setHumidity(bin.getHumidity());
+        dto.setFillLevels(bin.getFillLevels());
         return dto;
     }
 }

@@ -1,6 +1,6 @@
 package garbagegroup.cloud.service.serviceInterface;
 
-import garbagegroup.cloud.dto.BinDto;
+import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
