@@ -14,8 +14,11 @@ public class Bin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "location")
-    private String location;
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "latitude")
+    private Double latitude;
 
     @Column(name = "capacity")
     private Double capacity;
@@ -39,12 +42,29 @@ public class Bin {
 
     public Bin() {}
 
-    public Bin(String location, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
-        this.location = location;
+    public Bin(Double longitude, Double latitude, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
+        this.longitude = longitude;
+        this.latitude = latitude;
         this.capacity = capacity;
         this.fillThreshold = fillThreshold;
         this.emptiedLast = emptiedLast;
         this.pickUpTime = pickUpTime;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
     }
 
     public Long getId() {
@@ -87,10 +107,6 @@ public class Bin {
         return pickUpTime;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
     public void setCapacity(Double capacity) {
         this.capacity = capacity;
     }
@@ -101,10 +117,6 @@ public class Bin {
 
     public void setFillThreshold(Double fillThreshold) {
         this.fillThreshold = fillThreshold;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
     }
 
     public void setPickUpTime(LocalDateTime pickUpTime) {

@@ -3,7 +3,7 @@ package garbagegroup.cloud.controller;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.service.IBinService;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,12 @@ public class BinController {
     }
 
 
-    //The method tries to retrieve humidity information from a service based on a provided ID,
-    // handles cases where the humidity is present or not,
-    // and logs and returns an error response in case of an exception.
+    /**
+     * The method tries to retrieve humidity information from a service based on a provided ID,
+     * handles cases where the humidity is present or not,
+     * and logs and returns an error response in case of an exception.
+     */
+
     @GetMapping("/{id}/humidity")
     public ResponseEntity<Humidity> getCurrentHumidityByBinId(@PathVariable Long id) {
         try {
@@ -42,6 +45,11 @@ public class BinController {
         }
     }
 
+    /**
+     * Handles POST request for creating a bin
+     * @param binDTO
+     * @return The created bin
+     */
     @PostMapping
     public ResponseEntity<Bin> createBin(@RequestBody CreateBinDTO binDTO) {
         try {
@@ -52,6 +60,5 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
 }
 

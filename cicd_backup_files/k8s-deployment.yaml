@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garbage-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garbage-backend
+  template:
+    metadata:
+      labels:
+        app: garbage-backend
+    spec:
+      containers:
+        - name: garbage-backend
+          image: zythaarcz/garbage-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          volumeMounts: # This is to attach a volume to a pod in a container (with the springboot app)
+            - name: config-volume # Specifies the name of the volume
+              mountPath: /config # Specifies the path within the container where the ConfigMap should be mounted
+      restartPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: springboot-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: garbage-backend
+  labels:
+    app: garbage-backend
+spec:
+  selector:
+    app: garbage-backend
+  ports:
+    - protocol: "TCP"
+      port: 8080 # Where the service is running
+      targetPort: 8080 # The port exposed by the service
+  type: NodePort # Type of service
+
+---
+# ConfigMap for the DB credentials
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springboot-config
+data:
+  application.properties: |
+    spring.jpa.database=POSTGRESQL
+    spring.datasource.url=jdbc:postgresql://garbage-db.postgres.database.azure.com:5432/garbage_db
+    spring.datasource.username=garbage_username_123
+    spring.datasource.password=grbgpswrd123#
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    spring.jpa.hibernate.ddl-auto=update
+    server.port=8080
+
+

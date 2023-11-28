@@ -1,4 +1,4 @@
-package garbagegroup.cloud.service;
+package garbagegroup.cloud.service.serviceInterface;
 
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;

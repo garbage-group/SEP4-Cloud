@@ -1,18 +1,17 @@
-package garbagegroup.cloud.service;
+package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.repository.IBinRepository;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -116,7 +115,7 @@ public class BinService implements IBinService {
     @Override
     public Bin create(CreateBinDTO binDTO) {
         Bin createdBin = null;
-        Bin newBin = new Bin(binDTO.getLocation(), binDTO.getCapacity(), binDTO.getFillThreshold(), null, null);
+        Bin newBin = new Bin(binDTO.getLongitude(), binDTO.getLatitude(), binDTO.getCapacity(), binDTO.getFillThreshold(), null, null);
         int deviceId = getAvailableDevice();
         if (deviceId == 0) {
             Random random = new Random();
