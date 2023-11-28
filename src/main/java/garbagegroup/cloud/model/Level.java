@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 
 @Entity
 public class Level {
-
     @Id
     @ManyToOne
     @JoinColumn(name = "bin_id", nullable = false)
@@ -23,9 +22,7 @@ public class Level {
     @Id
     private LocalDateTime dateTime;
 
-    public Level() {
-    }
-
+    public Level() {}
     public Level(Bin bin, double value, LocalDateTime dateTime) {
         this.bin = bin;
         this.value = value;
@@ -34,10 +31,6 @@ public class Level {
 
     public Bin getBin() {
         return bin;
-    }
-
-    public void setBin(Bin bin) {
-        this.bin = bin;
     }
 
     public double getValue() {

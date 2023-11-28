@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 public class Bin {
@@ -42,18 +43,17 @@ public class Bin {
     @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
     @JsonManagedReference
     @JsonIgnoreProperties("bin")
-    private List<Level> level;
+    private List<Level> fillLevels;
 
-    public Bin(){
+    public Bin() {}
 
-    }
-
-    public List<Level> getLevel() {
-        return level;
-    }
-
-    public void setLevel(List<Level> level) {
-        this.level = level;
+    public Bin(Double longitude, Double latitude, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.capacity = capacity;
+        this.fillThreshold = fillThreshold;
+        this.emptiedLast = emptiedLast;
+        this.pickUpTime = pickUpTime;
     }
 
     public Double getLongitude() {
@@ -94,6 +94,14 @@ public class Bin {
 
     public void setHumidity(List<Humidity> humidity) {
         this.humidity = humidity;
+    }
+
+    public List<Level> getFillLevels() {
+        return fillLevels;
+    }
+
+    public void setFillLevels(List<Level> fillLevels) {
+        this.fillLevels = fillLevels;
     }
 
     public Double getCapacity() {

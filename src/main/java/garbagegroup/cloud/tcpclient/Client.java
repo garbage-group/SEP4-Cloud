@@ -57,8 +57,13 @@ public class Client {
                     outToServer.write(("fillThreshold received").getBytes());
                     outToServer.flush();
                 }
-
-            } catch (IOException e) {
+                else if (result.equals("getSerialNumber")) {
+                    outToServer.write("3456".getBytes());
+                    outToServer.flush();
+                }
+            }
+            catch (IOException e)
+            {
                 e.printStackTrace();
             }
         }

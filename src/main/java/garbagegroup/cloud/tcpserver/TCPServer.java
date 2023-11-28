@@ -8,20 +8,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Component
 public class TCPServer implements ITCPServer, Runnable {
-    private static int nextId = 1;
-    private ServerSocket serverSocket;
-    private ServerSocketHandler socketHandler;
-    private List<ServerSocketHandler> IoTDevices;
+    ServerSocket serverSocket;
+    ServerSocketHandler socketHandler;
+    List<ServerSocketHandler> IoTDevices = new ArrayList<>();
 
     public TCPServer() {
-        IoTDevices = new ArrayList<>();
-
         try {
             serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
@@ -38,8 +32,10 @@ public class TCPServer implements ITCPServer, Runnable {
                 Socket clientSocket = serverSocket.accept();
 
                 // Create a new thread to handle the client connection
-                socketHandler = new ServerSocketHandler(generateId(), clientSocket);
+                socketHandler = new ServerSocketHandler(clientSocket);
                 IoTDevices.add(socketHandler);
+                int serialNumber = getIoTSerialNumber();
+                socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
@@ -53,19 +49,17 @@ public class TCPServer implements ITCPServer, Runnable {
         new Thread(this).start();
     }
 
-    public static int generateId() { return nextId++; }
-
+    /**
+     * Method that requests humidity data from the IoT device and returns it to the BinService
+     * @param deviceId
+     * @return  humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
+     */
     @Override
-    public String getHumidityById(int deviceId) {
+    public String getDataById(int deviceId, String payload) {
         String response = "";
-        if (IoTDevices.size() == 0) response = "Device with ID " + deviceId + " is currently unavailable";
         for (ServerSocketHandler ssh: IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                response = ssh.sendMessage("getHumidity");
-            }
-            else {
-                response = "Device with ID " + deviceId + " is currently unavailable";
-                System.out.println(response);
+                response = ssh.sendMessage(payload);
             }
         }
         return response;
@@ -99,11 +93,20 @@ public class TCPServer implements ITCPServer, Runnable {
         return response;
     }
 
+    /**
+     * @return All currently connected IoT devices
+     */
+    @Override
+    public List<ServerSocketHandler> getIoTDevices() {
+        return IoTDevices;
+    }
 
-
-
-
-
-
-
+    /**
+     * Requests a serial number from the IoT device
+     * @return device's serial number
+     */
+    public int getIoTSerialNumber() {
+        String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
+        return Integer.parseInt(response);
+    }
 }

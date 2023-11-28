@@ -1,7 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
 
-import garbagegroup.cloud.dto.UserDto;
+import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
