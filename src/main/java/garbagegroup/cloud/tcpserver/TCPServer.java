@@ -71,6 +71,14 @@ public class TCPServer implements ITCPServer, Runnable {
         return response;
     }
 
+    /**
+     * Sets the fill threshold for a bin with the provided ID if associated with an IoT device.
+     * Sends the threshold to the associated IoT device for updating.
+     *
+     * @param binId       The ID of the bin for which the fill threshold is to be set.
+     * @param newThreshold The new fill threshold value to be set.
+     * @return A message indicating the status of setting the fill threshold. If the bin is not associated with any IoT device, a corresponding message is returned.
+     */
     @Override
     public String setFillThreshold(Long binId, double newThreshold) {
         String message = "setFillThreshold(" + newThreshold + ")";
