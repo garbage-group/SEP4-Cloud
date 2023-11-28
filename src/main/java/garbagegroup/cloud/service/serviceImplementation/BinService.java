@@ -1,5 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
+import garbagegroup.cloud.dto.BinDto;
+import garbagegroup.cloud.dto.DTOConverter;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.repository.IBinRepository;
@@ -16,6 +18,7 @@ import java.util.*;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
+    private DTOConverter dtoconverter;
 
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
@@ -25,7 +28,6 @@ public class BinService implements IBinService {
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
-
 
     @Override
     public synchronized Optional<Humidity> getCurrentHumidityByBinId(Long binId) {
@@ -90,4 +92,37 @@ public class BinService implements IBinService {
             saveHumidityById(deviceId, humidity, dateTime);
         }
     }
+
+    @Override
+    public void deleteBinById(long binId) {
+        if (binRepository.existsById(binId)) {
+            binRepository.deleteById(binId);
+        } else {
+            throw new NoSuchElementException("Bin with id " + binId + " not found");
+        }
+    }
+
+    @Override
+    public List<BinDto> findAllBins() {
+        List<Bin> bins = binRepository.findAll();
+        List<BinDto> binDtos = new ArrayList<>();
+        for (Bin bin: bins) {
+            BinDto dto = dtoconverter.convertToBinDto(bin);
+            binDtos.add(dto);
+        }
+        return binDtos;
+    }
+
+    @Override
+    public Optional<BinDto> findBinById(Long id) {
+        Optional<Bin> binOptional = binRepository.findById(id);
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
+            BinDto binDto = dtoconverter.convertToBinDto(bin);
+            return Optional.of(binDto);
+        } else {
+            return Optional.empty();
+        }
+    }
+
 }
