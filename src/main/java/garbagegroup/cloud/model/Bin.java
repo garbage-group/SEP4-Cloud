@@ -40,6 +40,11 @@ public class Bin {
     @JsonIgnoreProperties("bin")
     private List<Humidity> humidity;
 
+    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
+    @JsonManagedReference
+    @JsonIgnoreProperties("bin")
+    private List<Level> fillLevels;
+
     public Bin() {}
 
     public Bin(Double longitude, Double latitude, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
@@ -89,6 +94,14 @@ public class Bin {
 
     public void setHumidity(List<Humidity> humidity) {
         this.humidity = humidity;
+    }
+
+    public List<Level> getFillLevels() {
+        return fillLevels;
+    }
+
+    public void setFillLevels(List<Level> fillLevels) {
+        this.fillLevels = fillLevels;
     }
 
     public Double getCapacity() {
