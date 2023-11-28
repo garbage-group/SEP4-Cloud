@@ -17,6 +17,5 @@ public interface IBinService {
     public void setTCPServer(ITCPServer tcpServer);
     public void handleIoTData(int deviceId, String data);
     public Bin create(CreateBinDTO binDTO);
-
     public int getAvailableDevice();
 }

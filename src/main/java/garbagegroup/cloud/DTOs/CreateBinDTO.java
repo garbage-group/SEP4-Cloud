@@ -5,7 +5,6 @@ public class CreateBinDTO {
     private double capacity;
     private double fillThreshold;
 
-    public CreateBinDTO() {}
     public CreateBinDTO(String location, double capacity, double fillThreshold) {
         this.location = location;
         this.capacity = capacity;

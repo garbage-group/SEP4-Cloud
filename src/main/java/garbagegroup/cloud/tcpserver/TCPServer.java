@@ -10,9 +10,9 @@ import java.util.List;
 
 @Component
 public class TCPServer implements ITCPServer, Runnable {
-    private ServerSocket serverSocket;
-    private ServerSocketHandler socketHandler;
-    private List<ServerSocketHandler> IoTDevices;
+    ServerSocket serverSocket;
+    ServerSocketHandler socketHandler;
+    List<ServerSocketHandler> IoTDevices;
 
     public TCPServer() {
         IoTDevices = new ArrayList<>();
@@ -74,6 +74,7 @@ public class TCPServer implements ITCPServer, Runnable {
     /**
      * @return All currently connected IoT devices
      */
+    @Override
     public List<ServerSocketHandler> getIoTDevices() {
         return IoTDevices;
     }
@@ -83,7 +84,7 @@ public class TCPServer implements ITCPServer, Runnable {
      * @return device's serial number
      */
     public int getIoTSerialNumber() {
-        String response = socketHandler.sendMessage("getStatus");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
+        String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
 }

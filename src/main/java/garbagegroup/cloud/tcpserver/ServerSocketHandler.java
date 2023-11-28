@@ -35,6 +35,9 @@ public class ServerSocketHandler {
     } catch (IOException e) {
       System.out.println("Error sending/receiving message with device ID: " + deviceId);
       return "Client with an ID: " + deviceId + " disconnected";
+    } catch (NullPointerException e) {
+      System.out.println("Output stream not initialized for device ID: " + deviceId);
+      return "Client with an ID: " + deviceId + " disconnected";
     }
   }
 
