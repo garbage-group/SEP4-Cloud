@@ -12,11 +12,9 @@ import java.util.List;
 public class TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
-    List<ServerSocketHandler> IoTDevices;
+    List<ServerSocketHandler> IoTDevices = new ArrayList<>();
 
     public TCPServer() {
-        IoTDevices = new ArrayList<>();
-
         try {
             serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
@@ -56,16 +54,11 @@ public class TCPServer implements ITCPServer, Runnable {
      * @return  humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
      */
     @Override
-    public String getHumidityById(int deviceId) {
+    public String getDataById(int deviceId, String payload) {
         String response = "";
-        if (IoTDevices.size() == 0) response = "Device with ID " + deviceId + " is currently unavailable";
         for (ServerSocketHandler ssh: IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                response = ssh.sendMessage("getHumidity");
-            }
-            else {
-                response = "Device with ID " + deviceId + " is currently unavailable";
-                System.out.println(response);
+                response = ssh.sendMessage(payload);
             }
         }
         return response;

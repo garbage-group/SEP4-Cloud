@@ -26,19 +26,19 @@ class TCPServerTest {
     }
 
     @Test
-    void testGetHumidityById_DeviceUnavailable_DueToNoDevices() {
+    void testGetHumidityById_ReturnsEmptyString_DeviceIsNotPresent() {
         // Arrange
         tcpServer.IoTDevices = Collections.emptyList();
 
         // Act
-        String response = tcpServer.getHumidityById(1);
+        String response = tcpServer.getDataById(1, "getHumidity");
 
         // Assert
-        assertEquals("Device with ID 1 is currently unavailable", response);
+        assertEquals("", response);
     }
 
     @Test
-    void testGetHumidityById_DeviceUnavailable_DeviceWithID1NotPresent() {
+    void testGetHumidityById_ReturnsEmptyString_DeviceWithID1NotPresent() {
         // Arrange
         ServerSocketHandler mockHandler = mock(ServerSocketHandler.class);
         when(mockHandler.getDeviceId()).thenReturn(1);
@@ -46,10 +46,10 @@ class TCPServerTest {
         tcpServer.IoTDevices = Collections.singletonList(mockHandler);
 
         // Act
-        String response = tcpServer.getHumidityById(2);
+        String response = tcpServer.getDataById(2, "getHumidity");
 
         // Assert
-        assertEquals("Device with ID 2 is currently unavailable", response);
+        assertEquals("", response);
     }
 
     @Test
@@ -61,7 +61,7 @@ class TCPServerTest {
         tcpServer.IoTDevices = Collections.singletonList(mockHandler);
 
         // Act
-        String response = tcpServer.getHumidityById(1);
+        String response = tcpServer.getDataById(1, "getHumidity");
 
         // Assert
         assertEquals("humidityData", response);
