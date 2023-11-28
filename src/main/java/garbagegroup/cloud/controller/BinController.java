@@ -1,5 +1,7 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.slf4j.Logger;
@@ -23,9 +25,12 @@ public class BinController {
     }
 
 
-    //The method tries to retrieve humidity information from a service based on a provided ID,
-    // handles cases where the humidity is present or not,
-    // and logs and returns an error response in case of an exception.
+    /**
+     * The method tries to retrieve humidity information from a service based on a provided ID,
+     * handles cases where the humidity is present or not,
+     * and logs and returns an error response in case of an exception.
+     */
+
     @GetMapping("/{id}/humidity")
     public ResponseEntity<Humidity> getCurrentHumidityByBinId(@PathVariable Long id) {
         try {
@@ -40,5 +45,20 @@ public class BinController {
         }
     }
 
+    /**
+     * Handles POST request for creating a bin
+     * @param binDTO
+     * @return The created bin
+     */
+    @PostMapping
+    public ResponseEntity<Bin> createBin(@RequestBody CreateBinDTO binDTO) {
+        try {
+            Bin createdBin = binService.create(binDTO);
+            return new ResponseEntity<>(createdBin, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 }
 
