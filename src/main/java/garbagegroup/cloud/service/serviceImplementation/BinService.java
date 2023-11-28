@@ -28,6 +28,8 @@ public class BinService implements IBinService {
         this.setTCPServer(tcpServer);
     }
 
+    public BinService() {
+    }
 
     @Override
     public synchronized Optional<Humidity> getCurrentHumidityByBinId(Long binId) {
@@ -141,7 +143,7 @@ public class BinService implements IBinService {
      * @see Bin#setFillThreshold(Double)
      */
 
-    private void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
+    public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
             bin.setLongitude(updatedBinDto.getLongitude());
         } else {
@@ -201,15 +203,15 @@ public class BinService implements IBinService {
         return bin;
     }
 
-    private boolean isValidLongitude(Double longitude) {
+    public boolean isValidLongitude(Double longitude) {
         return longitude >= -180 && longitude <= 180;
     }
 
-    private boolean isValidLatitude(Double latitude) {
+    public boolean isValidLatitude(Double latitude) {
         return latitude >= -90 && latitude <= 90;
     }
 
-    private boolean isValidThreshold(Double threshold) {
+    public boolean isValidThreshold(Double threshold) {
         return threshold >= 0 && threshold <= 100;
     }
 
@@ -224,13 +226,16 @@ public class BinService implements IBinService {
         if (binOptional.isPresent()) {
             List<Level> alllevel = binOptional.get().getLevel();
 
-            alllevel.sort(Comparator.comparing(Level::getDateTime).reversed());
-            if (!alllevel.isEmpty()) {
-                return alllevel.get(0).getValue();
+            if (alllevel != null) { // Check if alllevel is not null
+                alllevel.sort(Comparator.comparing(Level::getDateTime).reversed());
+                if (!alllevel.isEmpty()) {
+                    return alllevel.get(0).getValue();
+                }
             }
             return 0;
         }
         return 0;
     }
+
 
 }
