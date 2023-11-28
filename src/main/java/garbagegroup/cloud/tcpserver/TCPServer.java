@@ -1,5 +1,6 @@
 package garbagegroup.cloud.tcpserver;
 
+import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -7,6 +8,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class TCPServer implements ITCPServer, Runnable {
@@ -66,4 +70,32 @@ public class TCPServer implements ITCPServer, Runnable {
         }
         return response;
     }
+
+    @Override
+    public String setFillThreshold(Long binId, double newThreshold) {
+        String message = "setFillThreshold(" + newThreshold + ")";
+        String response = "Bin with ID " + binId + " is not associated with any IoT device";
+        boolean isAssociated = false;
+
+        for (ServerSocketHandler ssh : IoTDevices) {
+            if (ssh.getDeviceId() == binId) {
+                response = ssh.sendMessage("setFillThreshold");
+                isAssociated = true; // Set flag to indicate association found
+                break;
+            }
+        }
+        if (!isAssociated) {
+            System.out.println(response);
+        }
+
+        return response;
+    }
+
+
+
+
+
+
+
+
 }

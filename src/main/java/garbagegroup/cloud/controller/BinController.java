@@ -1,5 +1,6 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.dto.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.slf4j.Logger;
@@ -37,6 +38,19 @@ public class BinController {
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PatchMapping("/{binId}")
+    public ResponseEntity<String> updateBin(@PathVariable Long binId, @RequestBody UpdateBinDto updatedBinDto) {
+        try {
+            updatedBinDto.setId(binId);
+            binService.updateBin(updatedBinDto);
+            return ResponseEntity.ok("Bin updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error updating bin");
         }
     }
 

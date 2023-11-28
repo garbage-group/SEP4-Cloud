@@ -39,8 +39,21 @@ public class Bin {
     @JsonIgnoreProperties("bin")
     private List<Humidity> humidity;
 
+    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
+    @JsonManagedReference
+    @JsonIgnoreProperties("bin")
+    private List<Level> level;
+
     public Bin(){
 
+    }
+
+    public List<Level> getLevel() {
+        return level;
+    }
+
+    public void setLevel(List<Level> level) {
+        this.level = level;
     }
 
     public Double getLongitude() {

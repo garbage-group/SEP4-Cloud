@@ -1,5 +1,6 @@
 package garbagegroup.cloud.service.serviceInterface;
 
+import garbagegroup.cloud.dto.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.TCPServer;
@@ -15,4 +16,5 @@ public interface IBinService {
     public void setTCPServer(ITCPServer tcpServer);
     public void handleIoTData(int deviceId, String data);
 
+    void updateBin(UpdateBinDto updatedBinDto);
 }

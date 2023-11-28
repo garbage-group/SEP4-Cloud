@@ -42,23 +42,26 @@ public class Client {
     }
 
     public void listenToMessages() {
-        while(true){
-            try
-            {
+        while (true) {
+            try {
                 // Read response
                 byte[] buffer = new byte[1024];
                 int bytesRead = inFromServer.read(buffer);
                 String result = new String(buffer, 0, bytesRead);
                 System.out.println("Client received: " + result);
+
                 if (result.equals("getHumidity")) {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
+                } else if (result.equals("setFillThreshold")) {
+                    outToServer.write(("fillThreshold received").getBytes());
+                    outToServer.flush();
                 }
-            }
-            catch (IOException e)
-            {
+
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
 }
