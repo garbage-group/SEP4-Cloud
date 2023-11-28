@@ -1,6 +1,6 @@
 package garbagegroup.cloud.controller;
 
-import garbagegroup.cloud.dto.UserDto;
+import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 
 import garbagegroup.cloud.model.User;
@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 
