@@ -39,13 +39,13 @@ public class BinService implements IBinService {
             // Sort the list of humidity values by date and time in descending order
             allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
 
-            if (allHumidity.get(0) != null) {
+            if (allHumidity.size() != 0) {
                 LocalDateTime measurementDateTime = allHumidity.get(0).getDateTime();
                 LocalDateTime currentDateTime = LocalDateTime.now();
 
                 // Check if the measurement is recent (within the last hour)
                 if (Duration.between(measurementDateTime, currentDateTime).getSeconds() > 3600) {
-                    String responseFromIoT = tcpServer.getHumidityById(binId.intValue());
+                    String responseFromIoT = tcpServer.getHumidityById(binOptional.get().getDeviceId());
                     if (responseFromIoT.contains("Device with ID " + binOptional.get().getDeviceId() + " is currently unavailable"))
                         return Optional.empty();
                     handleIoTData(binId.intValue(), responseFromIoT);
@@ -55,10 +55,18 @@ public class BinService implements IBinService {
                 allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
                 return Optional.of(allHumidity.get(0));
             } else {
-                // Handle the case where the Bin with the given ID is not found
-                return Optional.empty();
+                // This case is when bin is found but there is no reading from the IoT device so we gotta fetch it
+                String responseFromIoT = tcpServer.getHumidityById(binOptional.get().getDeviceId());
+                if (responseFromIoT.contains("Device with ID " + binOptional.get().getDeviceId() + " is currently unavailable"))
+                    return Optional.empty();
+                handleIoTData(binId.intValue(), responseFromIoT);
+                // Re-fetch humidity
+                allHumidity = binRepository.findById(binId).get().getHumidity();
+                allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
+                return Optional.of(allHumidity.get(0));
             }
         }
+        // Handle the case where the Bin with the given ID is not found
         return Optional.empty();
     }
 
