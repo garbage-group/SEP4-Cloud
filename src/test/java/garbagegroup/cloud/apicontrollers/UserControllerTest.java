@@ -1,7 +1,7 @@
 package garbagegroup.cloud.apicontrollers;
 
 import garbagegroup.cloud.controller.UserController;
-import garbagegroup.cloud.dto.UserDto;
+import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.service.serviceImplementation.UserService;

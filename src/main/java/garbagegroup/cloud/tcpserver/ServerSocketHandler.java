@@ -9,8 +9,7 @@ public class ServerSocketHandler {
   private InputStream inFromClient;
   private OutputStream outToClient;
 
-  public ServerSocketHandler(int deviceId, Socket socket) {
-    this.deviceId = deviceId;
+  public ServerSocketHandler(Socket socket) {
     this.socket = socket;
     try {
       outToClient = socket.getOutputStream();
@@ -36,10 +35,18 @@ public class ServerSocketHandler {
     } catch (IOException e) {
       System.out.println("Error sending/receiving message with device ID: " + deviceId);
       return "Client with an ID: " + deviceId + " disconnected";
+    } catch (NullPointerException e) {
+      System.out.println("Output stream not initialized for device ID: " + deviceId);
+      return "Client with an ID: " + deviceId + " disconnected";
     }
   }
 
   public int getDeviceId() {
     return deviceId;
   }
+
+  public void setDeviceId(int deviceId) {
+    this.deviceId = deviceId;
+  }
+
 }
