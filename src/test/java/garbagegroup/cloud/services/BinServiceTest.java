@@ -116,7 +116,6 @@ public class BinServiceTest {
     }
 
 
-}
 
     @Test
     public void testIsValidLatitude() {
