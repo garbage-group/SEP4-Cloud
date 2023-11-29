@@ -1,5 +1,6 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -61,6 +65,44 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<BinDto>> getAllBins() {
+        try {
+            List<BinDto> bins = binService.findAllBins();
+            return new ResponseEntity<>(bins, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching all bins", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BinDto> getBinById(@PathVariable Long id) {
+        try {
+            Optional<BinDto> bin = binService.findBinById(id);
+            return bin.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching bin with ID: " + id, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<HttpStatus> deleteBinById(@PathVariable Long id) {
+        try {
+            binService.deleteBinById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            logger.error("Error while deleting: Bin with ID " + id + " not found.", e);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            logger.error("Error occurred while deleting bin with ID: " + id, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PatchMapping("/{binId}")
     public ResponseEntity<String> updateBin(@PathVariable Long binId, @RequestBody UpdateBinDto updatedBinDto) {
         try {

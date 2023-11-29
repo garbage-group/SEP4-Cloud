@@ -1,5 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
+import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.DTOs.UserDto;
@@ -23,11 +25,13 @@ import java.util.*;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
+    private DTOConverter dtoConverter;
 
 
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
+        this.dtoConverter = new DTOConverter();
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
@@ -172,6 +176,38 @@ public class BinService implements IBinService {
             saveFillLevelById(binId, humidity, dateTime);
         }
 
+    }
+
+    @Override
+    public void deleteBinById(long binId) {
+        if (binRepository.existsById(binId)) {
+            binRepository.deleteById(binId);
+        } else {
+            throw new NoSuchElementException("Bin with id " + binId + " not found");
+        }
+    }
+
+    @Override
+    public List<BinDto> findAllBins() {
+        List<Bin> bins = binRepository.findAll();
+        List<BinDto> binDtos = new ArrayList<BinDto>();
+        for (Bin bin: bins) {
+            BinDto dto = dtoConverter.convertToBinDto(bin);
+            binDtos.add(dto);
+        }
+        return binDtos;
+    }
+
+    @Override
+    public Optional<BinDto> findBinById(Long id) {
+        Optional<Bin> binOptional = binRepository.findById(id);
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
+            BinDto binDto = dtoConverter.convertToBinDto(bin);
+            return Optional.of(binDto);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
