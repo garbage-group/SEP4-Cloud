@@ -41,8 +41,6 @@ public class BinServiceTest {
     @InjectMocks
     private BinService binService;
 
-
-
     @BeforeEach
     void setUp() {
         binRepository = mock(IBinRepository.class);
