@@ -49,6 +49,9 @@ public class TCPServer implements ITCPServer, Runnable {
         new Thread(this).start();
     }
 
+
+
+
     /**
      * Method that requests humidity data from the IoT device and returns it to the BinService
      * @param deviceId
@@ -61,37 +64,39 @@ public class TCPServer implements ITCPServer, Runnable {
             if (ssh.getDeviceId() == deviceId) {
                 response = ssh.sendMessage(payload);
             }
+            else {
+                response = "Iot with ID " + deviceId + " is not associated with any Bin";
+            }
         }
         return response;
     }
 
-    /**
-     * Sets the fill threshold for a bin with the provided ID if associated with an IoT device.
-     * Sends the threshold to the associated IoT device for updating.
-     *
-     * @param binId       The ID of the bin for which the fill threshold is to be set.
-     * @param newThreshold The new fill threshold value to be set.
-     * @return A message indicating the status of setting the fill threshold. If the bin is not associated with any IoT device, a corresponding message is returned.
-     */
     @Override
-    public String setFillThreshold(Long binId, double newThreshold) {
-        String message = "setFillThreshold(" + newThreshold + ")";
-        String response = "Bin with ID " + binId + " is not associated with any IoT device";
+    public String setDataById(int deviceId, String payload) {
+        String message = "setDataById(" + deviceId + ", " + payload + ")";
+        String response = "Iot with ID " + deviceId + " is not associated with any Bin";
+        if (IoTDevices.size()==0)
+            System.out.println(response);
         boolean isAssociated = false;
-
         for (ServerSocketHandler ssh : IoTDevices) {
-            if (ssh.getDeviceId() == binId) {
-                response = ssh.sendMessage("setFillThreshold");
-                isAssociated = true; // Set flag to indicate association found
+            if (ssh.getDeviceId() == deviceId) {
+                // Assuming deviceId is associated with a bin
+                response = ssh.sendMessage(payload);
+                System.out.println(response);
+                isAssociated = true;
                 break;
             }
         }
+
         if (!isAssociated) {
+            // If device ID is not associated with any bin
             System.out.println(response);
         }
 
         return response;
     }
+
+
 
     /**
      * @return All currently connected IoT devices

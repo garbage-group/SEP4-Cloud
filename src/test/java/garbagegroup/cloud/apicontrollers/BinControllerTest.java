@@ -1,7 +1,7 @@
 package garbagegroup.cloud.apicontrollers;
 
 import garbagegroup.cloud.controller.BinController;
-import garbagegroup.cloud.dto.UpdateBinDto;
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.aspectj.lang.annotation.Before;
 import org.junit.Test;

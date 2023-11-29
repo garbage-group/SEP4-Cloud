@@ -2,14 +2,17 @@ package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
+import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -86,6 +89,8 @@ public class BinService implements IBinService {
         }
         else loadFakeIoTDeviceData(binId, payload);     // Or load some fake data
     }
+
+
 
     /**
      * Saves humidity data fetched from the IoT to the DB
@@ -221,6 +226,7 @@ public class BinService implements IBinService {
         }
     }
 
+
     /**
      * This function saves fakes IoT data for a non-existent IoT device
      *
@@ -231,6 +237,7 @@ public class BinService implements IBinService {
         // Load some fake data
         if (payload.equals("getHumidity")) saveHumidityById(binId, 26.0, LocalDateTime.now());
     }
+
 
     /**
      * Evaluates whether a device attached to the bin is active or not
@@ -248,53 +255,41 @@ public class BinService implements IBinService {
         return false;
     }
 
-
-    /**
-     * Updates the Bin entity based on the provided information in the {@code updatedBinDto}.
-     * Retrieves the Bin by its ID from the repository, updates its fields, and saves the changes.
-     * Additionally, communicates with the IoT device associated with the Bin to update its fill threshold.
-     *
-     * @param updatedBinDto An instance of {@link UpdateBinDto} containing the updated information.
-     *                      Requires a valid ID matching an existing Bin in the repository.
-     *                      Should contain longitude, latitude, and fill threshold updates.
-     * @throws IllegalArgumentException If the updated bin fields (longitude, latitude, fill threshold) are invalid.
-     *                                  This occurs when the provided values are outside the valid range.
-     * @throws IllegalStateException    If the Bin is not associated with any IoT device, throwing an IllegalStateException.
-     *                                  This indicates that the Bin lacks an association with an IoT device.
-     * @throws Exception                If an error occurs while updating the Bin or communicating with the IoT device.
-     *                                  This captures any unexpected exceptions during the process.
-     */
-    public void updateBin(UpdateBinDto updatedBinDto) {
-        Optional<Bin> binOptional = binRepository.findById(updatedBinDto.getId());
-        binOptional.ifPresent(bin -> {
-            try {
-                updateBinFields(bin, updatedBinDto);
-                binRepository.save(bin);
-                communicateWithIoTToUpdateBin(bin.getId(), bin.getFillThreshold());
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                System.out.println(e.getMessage());
-            } catch (Exception e) {
-                System.out.println("Error updating bin: " + e.getMessage());
-            }
-        });
+    private void setIotData(int binId, int deviceId, String payload,double fillThreshold) {
+        try {
+                String responseFromIoT = tcpServer.setDataById(deviceId, payload);
+                System.out.println("Response from IoT device: " + deviceId+"which is associated with bin Id: "+binId + " : " + fillThreshold);
+        } catch (Exception e) {
+            System.out.println("Error communicating with IoT device: " + e.getMessage());
+        }
     }
 
-    /**
-     * Updates the fields of the provided Bin entity based on the information in the {@code updatedBinDto}.
-     * Validates and sets the longitude, latitude, and fill threshold values in the Bin entity.
-     * Additionally, ensures that the fill threshold is within the valid range and not set lower than the last level reading.
-     *
-     * @param bin            The {@link Bin} entity to be updated.
-     * @param updatedBinDto  An instance of {@link UpdateBinDto} containing updated information.
-     *                       Contains longitude, latitude, and fill threshold updates.
-     * @throws IllegalArgumentException If any of the updated bin fields (longitude, latitude, fill threshold) are invalid.
-     *                                  This occurs when the provided values are outside the valid range.
-     * @throws IllegalArgumentException If the fill threshold value is set lower than the last level reading.
-     *                                  This ensures that the new fill threshold is higher than or equal to the last level reading.
-     * @see Bin#setLongitude(Double)
-     * @see Bin#setLatitude(Double)
-     * @see Bin#setFillThreshold(Double)
-     */
+    public void updateBin(UpdateBinDto updatedBinDto) {
+        Optional<Bin> binOptional = binRepository.findById(updatedBinDto.getId());
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
+            try {
+                updateBinFields(bin, updatedBinDto);
+                bin.setId(updatedBinDto.getId());
+                int deviceId = bin.getDeviceId();
+
+                // Check if the device is active
+                boolean isActiveDevice = hasActiveDevice(deviceId);
+
+                if (isActiveDevice) {
+
+                        binRepository.save(bin);
+                        setIotData(bin.getId().intValue(), deviceId, "setFillThreshold", updatedBinDto.getFillthreshold());
+                    }
+                    else {
+                        throw new IllegalArgumentException("Device ID is active but not available to update the bin.");
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+        }
+    }
+
 
     public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
@@ -323,38 +318,15 @@ public class BinService implements IBinService {
         }
     }
 
-    /**
-     * Communicates with the IoT device to update the fill threshold of the associated bin.
-     * Sends the fill threshold value to the IoT device and handles the response received.
-     *
-     * @param binId         The ID of the bin to update on the IoT device.
-     * @param fillThreshold The new fill threshold value to be set for the bin.
-     * @see ITCPServer#setFillThreshold(Long, double)
-     */
-    private void communicateWithIoTToUpdateBin(Long binId,double fillThreshold) {
-        try {
-            String response = tcpServer.setFillThreshold(binId,fillThreshold);
-            System.out.println("Response from IoT device: " + response+" : "+fillThreshold);
-        } catch (Exception e) {
-            System.out.println("Error communicating with IoT device: " + e.getMessage());
-        }
+    public UpdateBinDto convertToBin(Bin bin) {
+        UpdateBinDto updatedBinDto = new UpdateBinDto();
+        updatedBinDto.setId(bin.getId());
+        updatedBinDto.setLongitude(bin.getLongitude());
+        updatedBinDto.setLatitude(bin.getLatitude());
+        updatedBinDto.setFillthreshold(bin.getFillThreshold());
+        return updatedBinDto;
     }
 
-
-    /**
-     * Converts an UpdateBinDto object to a Bin object.
-     *
-     * @param updatedBinDto The UpdateBinDto object containing updated bin information.
-     * @return A Bin object with values populated from the UpdateBinDto.
-     */
-    private Bin convertToBin(UpdateBinDto updatedBinDto) {
-        Bin bin = new Bin();
-        bin.setId(updatedBinDto.getId());
-        bin.setLongitude(updatedBinDto.getLongitude());
-        bin.setLatitude(updatedBinDto.getLatitude());
-        bin.setFillThreshold(updatedBinDto.getFillthreshold());
-        return bin;
-    }
 
     public boolean isValidLongitude(Double longitude) {
         return longitude >= -180 && longitude <= 180;
@@ -368,18 +340,12 @@ public class BinService implements IBinService {
         return threshold >= 0 && threshold <= 100;
     }
 
-    /**
-     * Retrieves the last level reading value for a given bin ID.
-     *
-     * @param binId The ID of the bin to fetch the last level reading from.
-     * @return The value of the last level reading for the specified bin ID. Returns 0 if no level readings are available.
-     */
     private double getLastLevelReading(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             List<Level> alllevel = binOptional.get().getFillLevels();
 
-            if (alllevel != null) { // Check if alllevel is not null
+            if (alllevel != null) {
                 alllevel.sort(Comparator.comparing(Level::getDateTime).reversed());
                 if (!alllevel.isEmpty()) {
                     return alllevel.get(0).getValue();

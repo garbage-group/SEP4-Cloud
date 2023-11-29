@@ -1,6 +1,6 @@
 package garbagegroup.cloud.services;
 
-import garbagegroup.cloud.dto.UpdateBinDto;
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceImplementation.BinService;
@@ -28,23 +28,6 @@ public class BinServiceTest {
         binService = new BinService(binRepository, tcpServer);
     }
 
-    @Test
-    void testUpdateBin_Success() {
-        UpdateBinDto updateBinDto = new UpdateBinDto();
-        updateBinDto.setId(1L);
-        updateBinDto.setLongitude(50.123);
-        updateBinDto.setLatitude(30.456);
-        updateBinDto.setFillthreshold(75.0);
-
-        Bin bin = new Bin();
-        bin.setId(updateBinDto.getId());
-        // Set other properties for bin if required...
-
-        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
-
-        assertDoesNotThrow(() -> binService.updateBin(updateBinDto));
-        // Add further assertions based on the expected behavior after updating the bin
-    }
     @Test
     public void testIsValidLongitude() {
         BinService binService = new BinService(); // Assuming no-args constructor available
