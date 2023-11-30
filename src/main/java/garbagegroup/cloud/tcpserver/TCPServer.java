@@ -64,9 +64,6 @@ public class TCPServer implements ITCPServer, Runnable {
             if (ssh.getDeviceId() == deviceId) {
                 response = ssh.sendMessage(payload);
             }
-            else {
-                response = "Iot with ID " + deviceId + " is not associated with any Bin";
-            }
         }
         return response;
     }
@@ -83,7 +80,7 @@ public class TCPServer implements ITCPServer, Runnable {
     public String setFillThreshold(double newThreshold) {
         String response = "";
         for (ServerSocketHandler ssh: IoTDevices) {
-            response = ssh.sendMessage("setFillThreshold :"+newThreshold);
+            response = ssh.sendMessage("setFillThreshold(" + newThreshold + ")");
         }
         return response;
     }

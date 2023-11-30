@@ -3,7 +3,6 @@ package garbagegroup.cloud.apicontrollers;
 import garbagegroup.cloud.controller.BinController;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
-import org.aspectj.lang.annotation.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
@@ -14,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 
