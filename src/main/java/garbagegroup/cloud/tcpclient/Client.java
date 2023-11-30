@@ -58,6 +58,14 @@ public class Client {
                     outToServer.write("3456".getBytes());
                     outToServer.flush();
                 }
+                else if (result.equals("getTemperature")) {
+                    outToServer.write("tempe:21.0".getBytes());
+                    outToServer.flush();
+                }
+                else if (result.equals("getCurrentLevel")) {
+                    outToServer.write("level:67.0".getBytes());
+                    outToServer.flush();
+                }
             }
             catch (IOException e)
             {
