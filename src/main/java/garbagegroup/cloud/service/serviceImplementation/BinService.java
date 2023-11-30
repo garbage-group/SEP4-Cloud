@@ -134,7 +134,7 @@ public class BinService implements IBinService {
      * @param dateTime
      */
     @Override
-    public boolean saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
+    public boolean saveHumidityByBinId(int binId, double humidity, LocalDateTime dateTime) {
         System.out.println("About to save humidity: " + humidity + " with date and time: " + dateTime + " to bin with ID: " + binId);
 
         try {
@@ -169,11 +169,11 @@ public class BinService implements IBinService {
      * @param dateTime
      */
     @Override
-    public void saveFillLevelById(int binId, double fillLevel, LocalDateTime dateTime) {
+    public boolean saveFillLevelByBinId(int binId, double fillLevel, LocalDateTime dateTime) {
         System.out.println("About to save fill level: " + fillLevel + " with date and time: " + dateTime + " to bin with ID: " + binId);
 
-        Optional<Bin> optionalBin = binRepository.findById((long) binId);
-        if (optionalBin.isPresent()) {
+        try {
+            Optional<Bin> optionalBin = binRepository.findById((long) binId);
             Bin bin = optionalBin.get();
             Level newFillLevel = new Level(bin, fillLevel, dateTime);
             if (bin.getFillLevels() == null) {
@@ -181,7 +181,16 @@ public class BinService implements IBinService {
                 fillLevelList.add(newFillLevel);
                 bin.setFillLevels(fillLevelList);
             } else bin.getFillLevels().add(newFillLevel);
-            binRepository.save(bin);
+            try {
+                binRepository.save(bin);
+                return true;
+            } catch (Exception e) {
+                System.err.println("Error saving fill level with Bin Id: " + binId + ".\n" + e.getMessage());
+                return false;
+            }
+        } catch(Exception e) {
+            System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
+            return false;
         }
     }
 
@@ -192,11 +201,11 @@ public class BinService implements IBinService {
      * @param temperature
      * @param dateTime
      */
-    public void saveTemperatureById(int binId, double temperature, LocalDateTime dateTime) {
+    public boolean saveTemperatureByBinId(int binId, double temperature, LocalDateTime dateTime) {
         System.out.println("About to save fill level: " + temperature + " with date and time: " + dateTime + " to bin with ID: " + binId);
 
-        Optional<Bin> optionalBin = binRepository.findById((long) binId);
-        if (optionalBin.isPresent()) {
+        try {
+            Optional<Bin> optionalBin = binRepository.findById((long) binId);
             Bin bin = optionalBin.get();
             Temperature newTemperature = new Temperature(bin, temperature, dateTime);
             if (bin.getTemperatures() == null) {
@@ -204,7 +213,16 @@ public class BinService implements IBinService {
                 temperatureList.add(newTemperature);
                 bin.setTemperatures(temperatureList);
             } else bin.getTemperatures().add(newTemperature);
-            binRepository.save(bin);
+            try {
+                binRepository.save(bin);
+                return true;
+            } catch (Exception e) {
+                System.err.println("Error saving temperature with Bin Id: " + binId + ".\n" + e.getMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
+            return false;
         }
     }
 
@@ -232,17 +250,17 @@ public class BinService implements IBinService {
         if (prefix.equals("humid")) {
             double humidity = Double.parseDouble(res);
             LocalDateTime dateTime = LocalDateTime.now();
-            saveHumidityById(binId, humidity, dateTime);
+            saveHumidityByBinId(binId, humidity, dateTime);
         }
         if (prefix.equals("level")) {
             double humidity = Double.parseDouble(res);
             LocalDateTime dateTime = LocalDateTime.now();
-            saveFillLevelById(binId, humidity, dateTime);
+            saveFillLevelByBinId(binId, humidity, dateTime);
         }
         if (prefix.equals("tempe")) {
             double temperature = Double.parseDouble(res);
             LocalDateTime dateTime = LocalDateTime.now();
-            saveTemperatureById(binId, temperature, dateTime);
+            saveTemperatureByBinId(binId, temperature, dateTime);
         }
     }
 
@@ -337,9 +355,9 @@ public class BinService implements IBinService {
      */
     public void loadFakeIoTDeviceData(int binId, String payload) {
         // Load some fake data
-        if (payload.equals("getHumidity")) saveHumidityById(binId, 26.0, LocalDateTime.now());
-        if (payload.equals("getTemperature")) saveTemperatureById(binId, 26.0, LocalDateTime.now());
-        if (payload.equals("getCurrentLevel")) saveFillLevelById(binId, 37.0, LocalDateTime.now());
+        if (payload.equals("getHumidity")) saveHumidityByBinId(binId, 26.0, LocalDateTime.now());
+        if (payload.equals("getTemperature")) saveTemperatureByBinId(binId, 26.0, LocalDateTime.now());
+        if (payload.equals("getCurrentLevel")) saveFillLevelByBinId(binId, 37.0, LocalDateTime.now());
     }
 
     /**
