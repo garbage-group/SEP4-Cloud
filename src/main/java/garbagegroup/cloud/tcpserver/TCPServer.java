@@ -10,13 +10,11 @@ import java.util.List;
 
 @Component
 public class TCPServer implements ITCPServer, Runnable {
-    private ServerSocket serverSocket;
-    private ServerSocketHandler socketHandler;
-    private List<ServerSocketHandler> IoTDevices;
+    ServerSocket serverSocket;
+    ServerSocketHandler socketHandler;
+    List<ServerSocketHandler> IoTDevices = new ArrayList<>();
 
     public TCPServer() {
-        IoTDevices = new ArrayList<>();
-
         try {
             serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
@@ -56,16 +54,11 @@ public class TCPServer implements ITCPServer, Runnable {
      * @return  humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
      */
     @Override
-    public String getHumidityById(int deviceId) {
+    public String getDataById(int deviceId, String payload) {
         String response = "";
-        if (IoTDevices.isEmpty()) response = "Device with ID " + deviceId + " is currently unavailable";
         for (ServerSocketHandler ssh: IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                response = ssh.sendMessage("getHumidity");
-            }
-            else {
-                response = "Device with ID " + deviceId + " is currently unavailable";
-                System.out.println(response);
+                response = ssh.sendMessage(payload);
             }
         }
         return response;
@@ -74,6 +67,7 @@ public class TCPServer implements ITCPServer, Runnable {
     /**
      * @return All currently connected IoT devices
      */
+    @Override
     public List<ServerSocketHandler> getIoTDevices() {
         return IoTDevices;
     }
@@ -83,7 +77,7 @@ public class TCPServer implements ITCPServer, Runnable {
      * @return device's serial number
      */
     public int getIoTSerialNumber() {
-        String response = socketHandler.sendMessage("getStatus");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
+        String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
 }

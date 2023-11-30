@@ -1,65 +1,45 @@
-package garbagegroup.cloud.model;
+package garbagegroup.cloud.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import garbagegroup.cloud.model.Humidity;
+import garbagegroup.cloud.model.Level;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-@Entity
-public class Bin {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class BinDto {
+
     private Long id;
-
-    @Column(name = "longitude")
     private Double longitude;
-
-    @Column(name = "latitude")
     private Double latitude;
-
-    @Column(name = "capacity")
     private Double capacity;
-
-    @Column(name = "emptied_last")
     private LocalDateTime emptiedLast;
-
-    @Column(name = "pick_up_time")
     private LocalDateTime pickUpTime;
-
-    @Column(name = "fill_threshold")
     private Double fillThreshold;
-
-    @Column(name = "device_id")
     private int deviceId;
-
-    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
-    @JsonManagedReference
-    @JsonIgnoreProperties("bin")
     private List<Humidity> humidity;
-
-    @OneToMany(mappedBy = "bin", cascade = CascadeType.ALL, fetch= FetchType.EAGER)
-    @JsonManagedReference
-    @JsonIgnoreProperties("bin")
     private List<Level> fillLevels;
 
-    public Bin() {}
-
-    public Bin(Double longitude, Double latitude, Double capacity, Double fillThreshold, LocalDateTime emptiedLast, LocalDateTime pickUpTime) {
+    public BinDto(){
+    }
+    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels) {
+        this.id = id;
         this.longitude = longitude;
         this.latitude = latitude;
         this.capacity = capacity;
-        this.fillThreshold = fillThreshold;
         this.emptiedLast = emptiedLast;
         this.pickUpTime = pickUpTime;
+        this.fillThreshold = fillThreshold;
+        this.deviceId = deviceId;
+        this.humidity = humidity;
+        this.fillLevels = fillLevels;
     }
 
     public Double getLongitude() {
         return longitude;
     }
-
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
@@ -79,7 +59,6 @@ public class Bin {
     public void setId(Long id) {
         this.id = id;
     }
-
     public int getDeviceId() {
         return deviceId;
     }
@@ -88,6 +67,7 @@ public class Bin {
         this.deviceId = deviceId;
     }
 
+    @OneToMany
     public List<Humidity> getHumidity() {
         return humidity;
     }
@@ -96,6 +76,7 @@ public class Bin {
         this.humidity = humidity;
     }
 
+    @OneToMany
     public List<Level> getFillLevels() {
         return fillLevels;
     }

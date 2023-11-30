@@ -1,19 +1,24 @@
 package garbagegroup.cloud.DTOs;
 
 public class CreateBinDTO {
-    private String location;
+    private double longitude;
+    private double latitude;
     private double capacity;
     private double fillThreshold;
 
-    public CreateBinDTO() {}
-    public CreateBinDTO(String location, double capacity, double fillThreshold) {
-        this.location = location;
+    public CreateBinDTO(double longitude, double latitude, double capacity, double fillThreshold) {
+        this.longitude = longitude;
+        this.latitude = latitude;
         this.capacity = capacity;
         this.fillThreshold = fillThreshold;
     }
 
-    public String getLocation() {
-        return location;
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
     }
 
     public double getCapacity() {
@@ -24,8 +29,12 @@ public class CreateBinDTO {
         return fillThreshold;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public void setCapacity(double capacity) {

@@ -54,7 +54,7 @@ public class Client {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
                 }
-                else if (result.equals("getStatus")) {
+                else if (result.equals("getSerialNumber")) {
                     outToServer.write("3456".getBytes());
                     outToServer.flush();
                 }
