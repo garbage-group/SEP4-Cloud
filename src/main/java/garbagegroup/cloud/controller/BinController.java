@@ -3,6 +3,7 @@ package garbagegroup.cloud.controller;
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.model.Temperature;
@@ -131,6 +132,21 @@ public class BinController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PatchMapping("/{binId}")
+    public ResponseEntity<String> updateBin(@PathVariable Long binId, @RequestBody UpdateBinDto updatedBinDto) {
+        try {
+            updatedBinDto.setId(binId);
+            binService.updateBin(updatedBinDto);
+            return ResponseEntity.ok("Bin updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating bin: " + e.getMessage());
+        }
+    }
+
+
 
 }
 

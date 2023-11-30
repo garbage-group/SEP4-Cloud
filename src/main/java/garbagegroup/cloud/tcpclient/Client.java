@@ -42,16 +42,19 @@ public class Client {
     }
 
     public void listenToMessages() {
-        while(true){
-            try
-            {
+        while (true) {
+            try {
                 // Read response
                 byte[] buffer = new byte[1024];
                 int bytesRead = inFromServer.read(buffer);
                 String result = new String(buffer, 0, bytesRead);
                 System.out.println("Client received: " + result);
+
                 if (result.equals("getHumidity")) {
                     outToServer.write(("humid:25.0").getBytes());
+                    outToServer.flush();
+                } else   if (result.startsWith("setFillThreshold")) {
+                    outToServer.write("Threshold set".getBytes());
                     outToServer.flush();
                 }
                 else if (result.equals("getSerialNumber")) {
@@ -73,4 +76,5 @@ public class Client {
             }
         }
     }
+
 }

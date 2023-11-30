@@ -1,5 +1,6 @@
 package garbagegroup.cloud.tcpserver;
 
+import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -48,6 +49,9 @@ public class TCPServer implements ITCPServer, Runnable {
         new Thread(this).start();
     }
 
+
+
+
     /**
      * Method that requests humidity data from the IoT device and returns it to the BinService
      * @param deviceId
@@ -60,6 +64,23 @@ public class TCPServer implements ITCPServer, Runnable {
             if (ssh.getDeviceId() == deviceId) {
                 response = ssh.sendMessage(payload);
             }
+        }
+        return response;
+    }
+
+    /**
+     * Sets the fill threshold for the connected IoT devices.
+     * Sends a command to set the fill threshold value to all connected IoT devices
+     * through their respective server socket handlers.
+     *
+     * @param newThreshold The new fill threshold value to be set
+     * @return The response received from the IoT devices after attempting to set the fill threshold
+     */
+    @Override
+    public String setFillThreshold(double newThreshold) {
+        String response = "";
+        for (ServerSocketHandler ssh: IoTDevices) {
+            response = ssh.sendMessage("setFillThreshold(" + newThreshold + ")");
         }
         return response;
     }

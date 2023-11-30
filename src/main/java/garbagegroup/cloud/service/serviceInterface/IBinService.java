@@ -1,5 +1,6 @@
 package garbagegroup.cloud.service.serviceInterface;
 
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
@@ -21,6 +22,8 @@ public interface IBinService {
     public void saveHumidityById(int binId, double humidity, LocalDateTime dateTime);      // Save to DB
     public void saveFillLevelById(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     public void setTCPServer(ITCPServer tcpServer);
+
+    void updateBin(UpdateBinDto updatedBinDto);
     public void handleIoTData(int deviceId, String data);
     public void deleteBinById(long binId);
     public List<BinDto> findAllBins();
