@@ -1,10 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-import garbagegroup.cloud.DTOs.DTOConverter;
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.*;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -318,6 +315,8 @@ public class BinService implements IBinService {
         }
     }
 
+
+
     /**
      * This function saves fakes IoT data for a non-existent IoT device
      *
@@ -389,7 +388,7 @@ public class BinService implements IBinService {
                         setIotData("setFillThreshold(double)", updatedBinDto.getFillthreshold());
                     }
                     else {
-                        throw new IllegalArgumentException("Device ID is active but not available to update the bin.");
+                        binRepository.save(bin);
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException(e.getMessage());
@@ -421,14 +420,7 @@ public class BinService implements IBinService {
         }
 
         if (isValidThreshold(updatedBinDto.getFillthreshold())) {
-            double lastLevelReading = getLastLevelReading(bin.getId());
-            double newFillThreshold = updatedBinDto.getFillthreshold();
-
-            if (newFillThreshold < lastLevelReading) {
-                throw new IllegalArgumentException("FillThreshold cannot be set lower than the last level reading");
-            }
-
-            bin.setFillThreshold(newFillThreshold);
+            bin.setFillThreshold(updatedBinDto.getFillthreshold());
         } else {
             throw new IllegalArgumentException("Invalid fill threshold value");
         }
@@ -471,4 +463,54 @@ public class BinService implements IBinService {
     }
 
 
-}
+    @Override
+    public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
+        List<Bin> bins = binRepository.findAll();
+        List<NotificationBinDto> notifications = new ArrayList<>();
+
+        for (Bin bin : bins) {
+            Level latestLevel = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
+            if (latestLevel != null && latestLevel.getValue() > bin.getFillThreshold()) {
+                notifications.add(convertToDTO(bin, latestLevel));
+            }
+        }
+        return notifications;
+    }
+
+    private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
+        return new NotificationBinDto(
+                bin.getFillThreshold(),
+                bin.getId(),
+                latestLevel.getValue(),
+                latestLevel.getDateTime()
+        );
+    }
+
+    @Override
+    public List<String> getNotificationMessages() {
+        List<Bin> bins = binRepository.findAll();
+        List<String> messages = new ArrayList<>();
+
+        for (Bin bin : bins) {
+            Level latestLevel = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
+            if (latestLevel != null && latestLevel.getValue() > bin.getFillThreshold()){
+                String message = generateMessage(latestLevel.getValue(), bin.getFillThreshold(), bin.getId(),latestLevel.getDateTime());
+                messages.add(message);
+            }
+        }
+
+        return messages;
+    }
+
+    private String generateMessage(Double levelValue, Double threshold, Long binId, LocalDateTime timestamp) {
+        return "Bin with ID: " + binId + " has a fill level of " + levelValue + " at " + timestamp + " which is above the threshold of " + threshold;
+    }
+
+
+    }
+
+
+
+
+
+
