@@ -2,13 +2,15 @@ package garbagegroup.cloud.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import java.time.LocalDateTime;
 
 @Entity
-public class Humidity extends SensorData {
-
+public class Temperature extends SensorData {
     @Id
     @ManyToOne
     @JoinColumn(name = "bin_id", nullable = false)
@@ -20,10 +22,10 @@ public class Humidity extends SensorData {
     @Id
     private LocalDateTime dateTime;
 
-    public Humidity() {
+    public Temperature() {
     }
 
-    public Humidity(Bin bin, double value, LocalDateTime dateTime) {
+    public Temperature(Bin bin, double value, LocalDateTime dateTime) {
         super(dateTime);
         this.bin = bin;
         this.value = value;
