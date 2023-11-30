@@ -53,8 +53,8 @@ public class Client {
                 if (result.equals("getHumidity")) {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
-                } else if (result.equals("setFillThreshold(double)")) {
-                    outToServer.write(("setFillThreshold(double)").getBytes());
+                } else   if (result.startsWith("setFillThreshold")) {
+                    outToServer.write("Threshold set".getBytes());
                     outToServer.flush();
                 }
                 else if (result.equals("getSerialNumber")) {

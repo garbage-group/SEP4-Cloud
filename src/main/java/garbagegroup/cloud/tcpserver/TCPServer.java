@@ -83,7 +83,7 @@ public class TCPServer implements ITCPServer, Runnable {
     public String setFillThreshold(double newThreshold) {
         String response = "";
         for (ServerSocketHandler ssh: IoTDevices) {
-            response = ssh.sendMessage("setFillThreshold(double)");
+            response = ssh.sendMessage("setFillThreshold :"+newThreshold);
         }
         return response;
     }
