@@ -7,6 +7,7 @@ import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
+import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,15 +32,15 @@ public class UserService implements IUserService {
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
 
-//        User user = new User("admin", "admin", "admin", "admin");
+//        User user = new User("garbage", "password", "garbage", "garbage collector", "horsens");
 //        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-//        userRepository.save(user);
+//        IUserRepository.save(user);
     }
 
     public UserDto convertToUserDto(User user) {
         UserDto userDto = new UserDto();
         userDto.setUsername(user.getUsername());
-        userDto.setPassword(user.getPassword()); // Ensure this is safe or consider not including passwords in DTOs
+        userDto.setPassword(user.getPassword());
         userDto.setRole(user.getRole());
         userDto.setFullname(user.getFullname());
 

@@ -30,7 +30,7 @@ public class UserController {
     }
 
 
-    @GetMapping("/{username}")
+    @GetMapping("/users/{username}")
     public ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("username") String username) {
         try {
             User user = userService.fetchUserByUsername(username);
