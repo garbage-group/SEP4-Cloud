@@ -291,15 +291,30 @@ public class BinService implements IBinService {
         return false;
     }
 
-    private void setIotData(int binId, int deviceId, String payload,double fillThreshold) {
+    /**
+     * Sets the fill threshold data to be sent to the IoT device with the specified payload.
+     *
+     * @param payload        The payload indicating the type of data being sent to the IoT device
+     * @param fillThreshold  The fill threshold value to be communicated to the IoT device
+     */
+    private void setIotData(String payload,double fillThreshold) {
         try {
-                String responseFromIoT = tcpServer.setDataById(deviceId, payload);
-                System.out.println("Response from IoT device: " + deviceId+"which is associated with bin Id: "+binId + " : " + fillThreshold);
+            // Communicate the fill threshold data to the IoT device
+            String responseFromIoT = tcpServer.setFillThreshold(fillThreshold);
+            System.out.println("fill threshold received from IoT device: " + responseFromIoT);
         } catch (Exception e) {
             System.out.println("Error communicating with IoT device: " + e.getMessage());
         }
     }
 
+    /**
+     * Updates the Bin information with the provided details in the UpdateBinDto.
+     * If the Bin is found and the associated device is active, it saves the updated bin information
+     * and sends the fill threshold data to the IoT device.
+     *
+     * @param updatedBinDto The DTO containing updated information for the Bin
+     * @throws IllegalArgumentException When encountering issues during the bin update process or device unavailability
+     */
     public void updateBin(UpdateBinDto updatedBinDto) {
         Optional<Bin> binOptional = binRepository.findById(updatedBinDto.getId());
         if (binOptional.isPresent()) {
@@ -313,9 +328,9 @@ public class BinService implements IBinService {
                 boolean isActiveDevice = hasActiveDevice(deviceId);
 
                 if (isActiveDevice) {
-
                         binRepository.save(bin);
-                        setIotData(bin.getId().intValue(), deviceId, "setFillThreshold", updatedBinDto.getFillthreshold());
+                        // Send fill threshold data to the IoT device
+                        setIotData("setFillThreshold(double)", updatedBinDto.getFillthreshold());
                     }
                     else {
                         throw new IllegalArgumentException("Device ID is active but not available to update the bin.");
@@ -327,6 +342,15 @@ public class BinService implements IBinService {
     }
 
 
+    /**
+     * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.
+     * Validates and sets the longitude, latitude, and fill threshold values for the Bin.
+     *
+     * @param bin            The Bin object to be updated
+     * @param updatedBinDto  The DTO containing updated values for the Bin
+     * @throws IllegalArgumentException if the provided longitude, latitude, or fill threshold is invalid
+     *         or if the fill threshold is lower than the last recorded level reading
+     */
     public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
             bin.setLongitude(updatedBinDto.getLongitude());
@@ -354,15 +378,6 @@ public class BinService implements IBinService {
         }
     }
 
-    public UpdateBinDto convertToBin(Bin bin) {
-        UpdateBinDto updatedBinDto = new UpdateBinDto();
-        updatedBinDto.setId(bin.getId());
-        updatedBinDto.setLongitude(bin.getLongitude());
-        updatedBinDto.setLatitude(bin.getLatitude());
-        updatedBinDto.setFillthreshold(bin.getFillThreshold());
-        return updatedBinDto;
-    }
-
 
     public boolean isValidLongitude(Double longitude) {
         return longitude >= -180 && longitude <= 180;
@@ -376,6 +391,13 @@ public class BinService implements IBinService {
         return threshold >= 0 && threshold <= 100;
     }
 
+    /**
+     * Retrieves the last recorded level reading for the specified Bin ID.
+     * Fetches the most recent level reading value from the database.
+     *
+     * @param binId The ID of the Bin for which the last level reading is required
+     * @return The value of the last recorded level reading or 0 if no readings are available
+     */
     private double getLastLevelReading(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {

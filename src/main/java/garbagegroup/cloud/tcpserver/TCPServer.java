@@ -71,32 +71,22 @@ public class TCPServer implements ITCPServer, Runnable {
         return response;
     }
 
+    /**
+     * Sets the fill threshold for the connected IoT devices.
+     * Sends a command to set the fill threshold value to all connected IoT devices
+     * through their respective server socket handlers.
+     *
+     * @param newThreshold The new fill threshold value to be set
+     * @return The response received from the IoT devices after attempting to set the fill threshold
+     */
     @Override
-    public String setDataById(int deviceId, String payload) {
-        String message = "setDataById(" + deviceId + ", " + payload + ")";
-        String response = "Iot with ID " + deviceId + " is not associated with any Bin";
-        if (IoTDevices.size()==0)
-            System.out.println(response);
-        boolean isAssociated = false;
-        for (ServerSocketHandler ssh : IoTDevices) {
-            if (ssh.getDeviceId() == deviceId) {
-                // Assuming deviceId is associated with a bin
-                response = ssh.sendMessage(payload);
-                System.out.println(response);
-                isAssociated = true;
-                break;
-            }
+    public String setFillThreshold(double newThreshold) {
+        String response = "";
+        for (ServerSocketHandler ssh: IoTDevices) {
+            response = ssh.sendMessage("setFillThreshold(double)");
         }
-
-        if (!isAssociated) {
-            // If device ID is not associated with any bin
-            System.out.println(response);
-        }
-
         return response;
     }
-
-
 
     /**
      * @return All currently connected IoT devices
