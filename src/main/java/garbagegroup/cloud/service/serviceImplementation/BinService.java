@@ -287,6 +287,8 @@ public class BinService implements IBinService {
             newBin.setDeviceId(randomDeviceId);
             createdBin = binRepository.save(newBin);
             loadFakeIoTDeviceData(newBin.getId().intValue(), "getHumidity");
+            loadFakeIoTDeviceData(newBin.getId().intValue(), "getTemperature");
+            loadFakeIoTDeviceData(newBin.getId().intValue(), "getCurrentLevel");
         } else {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
