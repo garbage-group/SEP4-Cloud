@@ -94,19 +94,30 @@ public class BinService implements IBinService {
      * @param dateTime
      */
     @Override
-    public void saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
+    public boolean saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
         System.out.println("About to save humidity: " + humidity + " with date and time: " + dateTime + " to bin with ID: " + binId);
 
-        Optional<Bin> optionalBin = binRepository.findById((long) binId);
-        if (optionalBin.isPresent()) {
+        try {
+            Optional<Bin> optionalBin = binRepository.findById((long) binId);
             Bin bin = optionalBin.get();
             Humidity newHumidity = new Humidity(bin, humidity, dateTime);
             if (bin.getHumidity() == null) {
                 List<Humidity> humidityList = new ArrayList<>();
                 humidityList.add(newHumidity);
                 bin.setHumidity(humidityList);
-            } else bin.getHumidity().add(newHumidity);
-            binRepository.save(bin);
+            }
+            else bin.getHumidity().add(newHumidity);
+
+            try {
+                binRepository.save(bin);
+                return true;
+            } catch (Exception e) {
+                System.err.println("Error saving humidity with Bin Id: " + binId + ".\n" + e.getMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
+            return false;
         }
     }
 
@@ -268,10 +279,10 @@ public class BinService implements IBinService {
      * @param deviceId
      * @return true/false
      */
-    private boolean hasActiveDevice(int deviceId) {
+    public boolean hasActiveDevice(int deviceId) {
         List<ServerSocketHandler> IoTDevices = tcpServer.getIoTDevices();   // Get all online devices
         if (IoTDevices == null) return false;
-        if (IoTDevices.size() == 0) return false;
+        if (IoTDevices.isEmpty()) return false;
         for (ServerSocketHandler IoTDevice : IoTDevices) {
             return IoTDevice.getDeviceId() == deviceId;
         }
