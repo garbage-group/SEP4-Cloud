@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
 @Entity
-public class Level {
+public class Level extends SensorData {
     @Id
     @ManyToOne
     @JoinColumn(name = "bin_id", nullable = false)
@@ -24,6 +24,7 @@ public class Level {
 
     public Level() {}
     public Level(Bin bin, double value, LocalDateTime dateTime) {
+        super(dateTime);
         this.bin = bin;
         this.value = value;
         this.dateTime = dateTime;

@@ -3,9 +3,7 @@ package garbagegroup.cloud.service.serviceImplementation;
 import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.model.Bin;
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.*;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
@@ -13,9 +11,11 @@ import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 
 @Service
 public class BinService implements IBinService {
@@ -35,31 +35,66 @@ public class BinService implements IBinService {
     }
 
     /**
-     * Fetches Humidity from the IoT device if the reading in DB is older than 1 hour, otherwise it gets from the IoT device
+     * Fetches SensorData from the IoT device
+     * If the reading in DB is newer than 1 hour, it returns it
+     * If the reading in DB is older than 1 hour, it gets new data from the IoT device
+     * If the IoT device is offline, it fakes the data
      *
      * @param binId
      * @return Optional<Humidity>
      */
-    @Override
-    public Optional<Humidity> getCurrentHumidityByBinId(Long binId) {
+    private <T extends SensorData> Optional<T> getCurrentSensorDataByBinId(Long binId, Function<Bin, List<T>> dataExtractor, String payload) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isEmpty()) {
             return Optional.empty();
         }
 
         Bin bin = binOptional.get();
-        List<Humidity> allHumidity = bin.getHumidity();
-        allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());   // To organize the humidity readings from newest to oldest
+        List<T> allData = dataExtractor.apply(bin);
+        allData.sort(Comparator.comparing(SensorData::getDateTime).reversed());
 
-        LocalDateTime measurementDateTime = (allHumidity.isEmpty()) ? null : allHumidity.get(0).getDateTime();  // Get the measurement time if the humidity readings are not null
+        LocalDateTime measurementDateTime = (allData.isEmpty()) ? null : allData.get(0).getDateTime();
         if (measurementDateTime == null || isMeasurementOld(measurementDateTime)) {
-            getIoTData(bin.getId().intValue(), bin.getDeviceId(), "getHumidity");
+            getIoTData(bin.getId().intValue(), bin.getDeviceId(), payload);
             bin = binRepository.findById(binId).orElse(bin);
-            allHumidity = bin.getHumidity();
-            allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
+            allData = dataExtractor.apply(bin);
+            allData.sort(Comparator.comparing(SensorData::getDateTime).reversed());
         }
 
-        return (allHumidity.isEmpty()) ? Optional.empty() : Optional.of(allHumidity.get(0));
+        return (allData.isEmpty()) ? Optional.empty() : Optional.of(allData.get(0));
+    }
+
+    /**
+     * Calls getCurrentSensorDataByBinId (which handles the logic about fetching data)
+     *
+     * @param binId
+     * @return Optional<Humidity>
+     */
+    @Override
+    public Optional<Humidity> getCurrentHumidityByBinId(Long binId) {
+        return getCurrentSensorDataByBinId(binId, Bin::getHumidity, "getHumidity");
+    }
+
+    /**
+     * Calls getCurrentSensorDataByBinId (which handles the logic about fetching data)
+     *
+     * @param binId
+     * @return Optional<Temperature>
+     */
+    @Override
+    public Optional<Temperature> getCurrentTemperatureByBinId(Long binId) {
+        return getCurrentSensorDataByBinId(binId, Bin::getTemperatures, "getTemperature");
+    }
+
+    /**
+     * Calls getCurrentSensorDataByBinId (which handles the logic about fetching data)
+     *
+     * @param binId
+     * @return Optional<Level>
+     */
+    @Override
+    public Optional<Level> getCurrentFillLevelByBinId(Long binId) {
+        return getCurrentSensorDataByBinId(binId, Bin::getFillLevels, "getCurrentLevel");
     }
 
     /**
@@ -74,6 +109,7 @@ public class BinService implements IBinService {
 
     /**
      * If the IoT device is active, it fetches it from it, if not, it fakes it
+     *
      * @param binId
      * @return
      */
@@ -135,6 +171,29 @@ public class BinService implements IBinService {
     }
 
     /**
+     * Save fill temperature fetched from the IoT device to the DB
+     *
+     * @param binId
+     * @param temperature
+     * @param dateTime
+     */
+    public void saveTemperatureById(int binId, double temperature, LocalDateTime dateTime) {
+        System.out.println("About to save fill level: " + temperature + " with date and time: " + dateTime + " to bin with ID: " + binId);
+
+        Optional<Bin> optionalBin = binRepository.findById((long) binId);
+        if (optionalBin.isPresent()) {
+            Bin bin = optionalBin.get();
+            Temperature newTemperature = new Temperature(bin, temperature, dateTime);
+            if (bin.getTemperatures() == null) {
+                List<Temperature> temperatureList = new ArrayList<>();
+                temperatureList.add(newTemperature);
+                bin.setTemperatures(temperatureList);
+            } else bin.getTemperatures().add(newTemperature);
+            binRepository.save(bin);
+        }
+    }
+
+    /**
      * Sets the tcpServer
      *
      * @param tcpServer
@@ -164,6 +223,11 @@ public class BinService implements IBinService {
             double humidity = Double.parseDouble(res);
             LocalDateTime dateTime = LocalDateTime.now();
             saveFillLevelById(binId, humidity, dateTime);
+        }
+        if (prefix.equals("tempe")) {
+            double temperature = Double.parseDouble(res);
+            LocalDateTime dateTime = LocalDateTime.now();
+            saveTemperatureById(binId, temperature, dateTime);
         }
     }
 
@@ -219,9 +283,6 @@ public class BinService implements IBinService {
             newBin.setDeviceId(randomDeviceId);
             createdBin = binRepository.save(newBin);
             loadFakeIoTDeviceData(newBin.getId().intValue(), "getHumidity");
-            //loadFakeIoTDeviceData(newBin.getId().intValue(), "getCurrentLevel");
-            //loadFakeIoTDeviceData(newBin.getId().intValue(), "getTemperature");
-
         } else {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
@@ -260,6 +321,8 @@ public class BinService implements IBinService {
     public void loadFakeIoTDeviceData(int binId, String payload) {
         // Load some fake data
         if (payload.equals("getHumidity")) saveHumidityById(binId, 26.0, LocalDateTime.now());
+        if (payload.equals("getTemperature")) saveTemperatureById(binId, 26.0, LocalDateTime.now());
+        if (payload.equals("getCurrentLevel")) saveFillLevelById(binId, 37.0, LocalDateTime.now());
     }
 
     /**
