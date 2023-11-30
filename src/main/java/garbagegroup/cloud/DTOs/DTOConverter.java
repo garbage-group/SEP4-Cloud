@@ -18,6 +18,7 @@ public class DTOConverter {
         dto.setDeviceId(bin.getDeviceId());
         dto.setHumidity(bin.getHumidity());
         dto.setFillLevels(bin.getFillLevels());
+        dto.setTemperatures(bin.getTemperatures());
         return dto;
     }
 }
