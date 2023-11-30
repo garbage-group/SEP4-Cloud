@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface IBinService {
 
     Optional<Humidity> getCurrentHumidityByBinId(Long binId);
-    public void saveHumidityById(int deviceId, double humidity, LocalDateTime dateTime);      // Save to DB
+    public boolean saveHumidityById(int deviceId, double humidity, LocalDateTime dateTime);      // Save to DB
     public void setTCPServer(ITCPServer tcpServer);
     public void handleIoTData(int deviceId, String data);
     public Bin create(CreateBinDTO binDTO);

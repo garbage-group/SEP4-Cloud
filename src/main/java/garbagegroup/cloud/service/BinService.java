@@ -7,12 +7,10 @@ import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-import garbagegroup.cloud.tcpserver.TCPServer;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -39,36 +37,37 @@ public class BinService implements IBinService {
             // Sort the list of humidity values by date and time in descending order
             allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
 
-            if (allHumidity.get(0) != null) {
+            if (!allHumidity.isEmpty()) {
                 LocalDateTime measurementDateTime = allHumidity.get(0).getDateTime();
                 LocalDateTime currentDateTime = LocalDateTime.now();
 
                 // Check if the measurement is recent (within the last hour)
                 if (Duration.between(measurementDateTime, currentDateTime).getSeconds() > 3600) {
                     String responseFromIoT = tcpServer.getHumidityById(binId.intValue());
-                    if (responseFromIoT.contains("Device with ID " + binOptional.get().getDeviceId() + " is currently unavailable"))
+                    if (responseFromIoT.contains("unavailable"))
                         return Optional.empty();
                     handleIoTData(binId.intValue(), responseFromIoT);
                 }
 
-                allHumidity = binRepository.findById(binId).get().getHumidity();
+                allHumidity = binOptional.get().getHumidity();
                 allHumidity.sort(Comparator.comparing(Humidity::getDateTime).reversed());
                 return Optional.of(allHumidity.get(0));
             } else {
-                // Handle the case where the Bin with the given ID is not found
+                //handle that the list of humidities is empty
                 return Optional.empty();
             }
         }
+        // Handle the case where the Bin with the given ID is not found
         return Optional.empty();
     }
 
 
     @Override
-    public synchronized void saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
+    public synchronized boolean saveHumidityById(int binId, double humidity, LocalDateTime dateTime) {
         System.out.println("About to save humidity: " + humidity + " with date and time: " + dateTime + " to bin with ID: " + binId);
 
-        Optional<Bin> optionalBin = binRepository.findById((long) binId);
-        if (optionalBin.isPresent()) {
+        try {
+            Optional<Bin> optionalBin = binRepository.findById((long) binId);
             Bin bin = optionalBin.get();
             Humidity newHumidity = new Humidity(bin, humidity, dateTime);
             if (bin.getHumidity() == null) {
@@ -77,7 +76,17 @@ public class BinService implements IBinService {
                 bin.setHumidity(humidityList);
             }
             else bin.getHumidity().add(newHumidity);
-            binRepository.save(bin);
+
+            try {
+                binRepository.save(bin);
+                return true;
+            } catch (Exception e) {
+                System.err.println("Error saving humidity with Bin Id: " + binId + ".\n" + e.getMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
+            return false;
         }
     }
 
