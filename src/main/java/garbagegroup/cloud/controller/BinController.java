@@ -5,6 +5,8 @@ import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
+import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.Temperature;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,34 @@ public class BinController {
             Optional<Humidity> humidity = binService.getCurrentHumidityByBinId(id);
 
             return humidity.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
+        } catch (Exception e) {
+            logger.error("Error retrieving humidity for bin with id {}", id, e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/{id}/temperature")
+    public ResponseEntity<Temperature> getCurrentTemperatureByBinId(@PathVariable Long id) {
+        try {
+            Optional<Temperature> temperature = binService.getCurrentTemperatureByBinId(id);
+
+            return temperature.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
+        } catch (Exception e) {
+            logger.error("Error retrieving humidity for bin with id {}", id, e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/{id}/fill_level")
+    public ResponseEntity<Level> getCurrentFillLevelByBinId(@PathVariable Long id) {
+        try {
+            Optional<Level> fillLevel = binService.getCurrentFillLevelByBinId(id);
+
+            return fillLevel.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
 
         } catch (Exception e) {

@@ -5,6 +5,8 @@ import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
+import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.Temperature;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.Optional;
 public interface IBinService {
 
     Optional<Humidity> getCurrentHumidityByBinId(Long binId);
+    Optional<Temperature> getCurrentTemperatureByBinId(Long binId);
+    Optional<Level> getCurrentFillLevelByBinId(Long binId);
     public void saveHumidityById(int binId, double humidity, LocalDateTime dateTime);      // Save to DB
     public void saveFillLevelById(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     public void setTCPServer(ITCPServer tcpServer);
