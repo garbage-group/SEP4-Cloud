@@ -30,6 +30,11 @@ public class Level extends SensorData {
         this.dateTime = dateTime;
     }
 
+    public Level(double currentFillLevel,LocalDateTime dateTime) {
+        this.value = currentFillLevel;
+        this.dateTime = dateTime;
+    }
+
     public Bin getBin() {
         return bin;
     }

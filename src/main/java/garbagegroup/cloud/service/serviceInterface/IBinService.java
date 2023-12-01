@@ -33,5 +33,4 @@ public interface IBinService {
     public Bin create(CreateBinDTO binDTO);
     public int getAvailableDevice();
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
-    List<String> getNotificationMessages();
 }

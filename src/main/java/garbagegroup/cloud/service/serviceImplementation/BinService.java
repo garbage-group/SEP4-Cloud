@@ -385,7 +385,7 @@ public class BinService implements IBinService {
                 if (isActiveDevice) {
                         binRepository.save(bin);
                         // Send fill threshold data to the IoT device
-                        setIotData("setFillThreshold(double)", updatedBinDto.getFillthreshold());
+                        setIotData("setFillThreshold("+updatedBinDto.getFillthreshold()+")", updatedBinDto.getFillthreshold());
                     }
                     else {
                         binRepository.save(bin);
@@ -410,19 +410,19 @@ public class BinService implements IBinService {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
             bin.setLongitude(updatedBinDto.getLongitude());
         } else {
-            throw new IllegalArgumentException("Invalid longitude value");
+            throw new IllegalArgumentException("longitude should be in between -180 and 180");
         }
 
         if (isValidLatitude(updatedBinDto.getLatitude())) {
             bin.setLatitude(updatedBinDto.getLatitude());
         } else {
-            throw new IllegalArgumentException("Invalid latitude value");
+            throw new IllegalArgumentException("latitude should ne between -90 and 90");
         }
 
         if (isValidThreshold(updatedBinDto.getFillthreshold())) {
             bin.setFillThreshold(updatedBinDto.getFillthreshold());
         } else {
-            throw new IllegalArgumentException("Invalid fill threshold value");
+            throw new IllegalArgumentException("threshold value should be between 0 and 100");
         }
     }
 
@@ -446,36 +446,58 @@ public class BinService implements IBinService {
      * @param binId The ID of the Bin for which the last level reading is required
      * @return The value of the last recorded level reading or 0 if no readings are available
      */
-    private double getLastLevelReading(Long binId) {
+    private Level getLastLevelReadingWithTimestamp(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
-            List<Level> alllevel = binOptional.get().getFillLevels();
-
-            if (alllevel != null) {
-                alllevel.sort(Comparator.comparing(Level::getDateTime).reversed());
-                if (!alllevel.isEmpty()) {
-                    return alllevel.get(0).getValue();
+            List<Level> allLevels = binOptional.get().getFillLevels();
+            if (allLevels != null) {
+                allLevels.sort(Comparator.comparing(Level::getDateTime).reversed());
+                if (!allLevels.isEmpty()) {
+                    return allLevels.get(0); // Return the level object with the latest timestamp
                 }
             }
-            return 0;
         }
-        return 0;
+        return new Level(); // Return an empty Level object if not found
     }
 
 
+    /**
+     * Retrieves a list of bins where the current fill level exceeds the set threshold,
+     * generating notification data for each such bin.
+     *
+     * @return List of NotificationBinDto objects representing bins with fill levels
+     *         surpassing their threshold.
+     */
     @Override
     public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
         List<Bin> bins = binRepository.findAll();
+        // Initialize an empty list to store notifications
         List<NotificationBinDto> notifications = new ArrayList<>();
 
         for (Bin bin : bins) {
-            Level latestLevel = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
-            if (latestLevel != null && latestLevel.getValue() > bin.getFillThreshold()) {
-                notifications.add(convertToDTO(bin, latestLevel));
+            boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
+
+            if (isActiveDevice) {
+                // If the device is active, get the current fill level directly from the device
+                Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
+                if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
+                    notifications.add(convertToDTO(bin, currentLevelFromDevice));
+                }
+            } else {
+                // If the device is inactive, retrieve the latest level reading from the database
+                Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
+                double currentFillLevel = lastLevelWithTimestamp.getValue();
+                LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
+
+                if (currentFillLevel > bin.getFillThreshold()) {
+                    // Create a new Level object using the retrieved values and add it to notifications
+                    notifications.add(convertToDTO(bin, new Level(currentFillLevel, timestamp)));
+                }
             }
         }
         return notifications;
     }
+
 
     private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(
@@ -486,25 +508,6 @@ public class BinService implements IBinService {
         );
     }
 
-    @Override
-    public List<String> getNotificationMessages() {
-        List<Bin> bins = binRepository.findAll();
-        List<String> messages = new ArrayList<>();
-
-        for (Bin bin : bins) {
-            Level latestLevel = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
-            if (latestLevel != null && latestLevel.getValue() > bin.getFillThreshold()){
-                String message = generateMessage(latestLevel.getValue(), bin.getFillThreshold(), bin.getId(),latestLevel.getDateTime());
-                messages.add(message);
-            }
-        }
-
-        return messages;
-    }
-
-    private String generateMessage(Double levelValue, Double threshold, Long binId, LocalDateTime timestamp) {
-        return "Bin with ID: " + binId + " has a fill level of " + levelValue + " at " + timestamp + " which is above the threshold of " + threshold;
-    }
 
 
     }

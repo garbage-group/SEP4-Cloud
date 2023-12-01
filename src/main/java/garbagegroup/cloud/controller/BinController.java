@@ -160,16 +160,5 @@ public class BinController {
         }
     }
 
-    @GetMapping("/notificationMessages")
-    public ResponseEntity<List<String>> getNotificationMessages() {
-        try {
-            List<String> messages = binService.getNotificationMessages();
-            return new ResponseEntity<>(messages, HttpStatus.OK);
-        } catch (Exception e) {
-            logger.error("Error occurred while fetching all bins", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
 }
 
