@@ -1,5 +1,8 @@
 package garbagegroup.cloud.tcpserver;
 
+import garbagegroup.cloud.DTOs.UpdateBinDto;
+import garbagegroup.cloud.service.serviceImplementation.BinService;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,8 @@ public class TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
     List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+    private List<DeviceStatusListener> deviceStatusListeners = new ArrayList<>();
+    private IBinService binService;
 
     public TCPServer() {
         try {
@@ -22,6 +27,8 @@ public class TCPServer implements ITCPServer, Runnable {
             e.printStackTrace();
         }
     }
+
+
 
     @Override
     public void run() {
@@ -36,13 +43,17 @@ public class TCPServer implements ITCPServer, Runnable {
                 IoTDevices.add(socketHandler);
                 int serialNumber = getIoTSerialNumber();
                 socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
+                notifyDeviceConnected(serialNumber);
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
+
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
                 //e.printStackTrace();
             }
         }
     }
+
+
 
     @Override
     public void startServer() {
@@ -93,6 +104,8 @@ public class TCPServer implements ITCPServer, Runnable {
         return IoTDevices;
     }
 
+
+
     /**
      * Requests a serial number from the IoT device
      * @return device's serial number
@@ -101,4 +114,46 @@ public class TCPServer implements ITCPServer, Runnable {
         String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
+
+    /**
+     * Adds a DeviceStatusListener to the list of listeners.
+     * This method registers a listener to receive notifications related to device status changes.
+     *
+     * @param listener The DeviceStatusListener to be added for status change notifications
+     */
+    @Override
+    public void addDeviceStatusListener(DeviceStatusListener listener) {
+        deviceStatusListeners.add(listener);
+    }
+
+    /**
+     * Handles the event triggered when a device becomes connected or online.
+     * This method contains the logic executed when a device establishes a connection,
+     * including printing a message indicating the device ID that has come online.
+     * It further triggers the notification of connected devices to registered listeners.
+     *
+     * @param deviceId The identifier of the device that has become online
+     */
+    @Override
+    public void onDeviceConnected(int deviceId) {
+        // Logic to handle when a device becomes online
+        System.out.println("Device " + deviceId + " is now online!");
+        notifyDeviceConnected(deviceId);
+    }
+
+
+    /**
+     * Notifies all registered listeners about the connection of a device.
+     * Calls the 'onDeviceConnected' method for each registered listener,
+     * providing the device ID that has been connected.
+     *
+     * @param deviceId The identifier of the device that has become online
+     */
+    private void notifyDeviceConnected(int deviceId) {
+        for (DeviceStatusListener listener : deviceStatusListeners) {
+            listener.onDeviceConnected(deviceId);
+        }
+    }
+
+
 }

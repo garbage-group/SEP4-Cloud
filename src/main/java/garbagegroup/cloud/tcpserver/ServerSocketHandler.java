@@ -2,12 +2,17 @@ package garbagegroup.cloud.tcpserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServerSocketHandler {
   private int deviceId;
   private Socket socket;
   private InputStream inFromClient;
   private OutputStream outToClient;
+  private Map<Integer, Boolean> connectedDevices = new HashMap<>(); // Map to store device ID and its online status
+
+
 
   public ServerSocketHandler(Socket socket) {
     this.socket = socket;
@@ -48,5 +53,6 @@ public class ServerSocketHandler {
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
+
 
 }

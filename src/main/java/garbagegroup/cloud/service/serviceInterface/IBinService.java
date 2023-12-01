@@ -31,4 +31,7 @@ public interface IBinService {
     public void getIoTData(int binId, int deviceId, String payload);
     public Bin create(CreateBinDTO binDTO);
     public int getAvailableDevice();
+    void onDeviceConnected(int deviceId);
+
+//    void deviceStatusChanged(boolean isOnline);
 }
