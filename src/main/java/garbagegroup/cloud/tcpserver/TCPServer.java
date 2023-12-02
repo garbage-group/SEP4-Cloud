@@ -60,9 +60,6 @@ public class TCPServer implements ITCPServer, Runnable {
         new Thread(this).start();
     }
 
-
-
-
     /**
      * Method that requests humidity data from the IoT device and returns it to the BinService
      * @param deviceId

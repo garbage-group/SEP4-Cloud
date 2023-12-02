@@ -1,16 +1,32 @@
 package garbagegroup.cloud.tcpclient;
 
+import org.springframework.stereotype.Component;
+
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
+@Component
 public class Client {
     private OutputStream outToServer;
     private InputStream inFromServer;
+    private InetAddress address;
 
     public void startClient() {
+        try {
+            String url = "https://garbage-backend-service-kq2hras2oq-ey.a.run.app"; // Replace with the URL you want to convert
+            address = InetAddress.getByName(new URL(url).getHost());
+
+            System.out.println("URL: " + url);
+            System.out.println("IP Address: " + address.getHostAddress());
+        } catch (MalformedURLException e) {
+            System.out.println("Invalid URL");
+        } catch (UnknownHostException e) {
+            System.out.println("Unable to find IP address for the given URL");
+        }
+
         try{
             Socket socket = new Socket("localhost", 2910);
             System.out.println("Connected to the server");

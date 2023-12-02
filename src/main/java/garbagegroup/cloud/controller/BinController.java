@@ -2,6 +2,7 @@ package garbagegroup.cloud.controller;
 
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.DTOs.NotificationBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
@@ -147,6 +148,17 @@ public class BinController {
     }
 
 
+
+    @GetMapping("/notification")
+    public ResponseEntity<List<NotificationBinDto>> getBinsWithThresholdLessThanFillLevel() {
+        try {
+            List<NotificationBinDto> bins = binService.getBinsWithThresholdLessThanFillLevel();
+            return new ResponseEntity<>(bins, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching all bins", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
 
