@@ -7,16 +7,26 @@ public class UserDto {
     private String password;
     private String fullname;
     private String role;
+    private String region;
 
-    public UserDto(String username, String password, String fullname, String role) {
+    public UserDto(String username, String password, String fullname, String role, String region) {
         this.username = username;
         this.password = password;
         this.fullname = fullname;
         this.role = role;
+        this.region = region;
     }
 
     public UserDto() {
 
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
     }
 
     public String getUsername() {

@@ -1,5 +1,6 @@
 package garbagegroup.cloud.service.serviceInterface;
 
+import garbagegroup.cloud.DTOs.NotificationBinDto;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
@@ -32,4 +33,6 @@ public interface IBinService {
     void getIoTData(int binId, int deviceId, String payload);
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
+
+    List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
 }
