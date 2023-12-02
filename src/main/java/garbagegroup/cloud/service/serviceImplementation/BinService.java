@@ -405,26 +405,43 @@ public class BinService implements IBinService, DeviceStatusListener {
                 }
             }
         }
+
+        /**
+         * Called when a device is connected to the TCP server.
+         * Checks if there are any pending updates for the device and sends them to the device.
+         * if there are more than one update, only the last one is sent.
+         *
+         * @param deviceId The ID of the device that is now online
+         */
     @Override
     public void onDeviceConnected(int deviceId) {
         System.out.println("Device " + deviceId + " is now online!");
 
         // Check if there are pending updates
+        UpdateBinDto lastUpdatedThreshold = null;
         while (!pendingUpdates.isEmpty()) {
             UpdateBinDto pendingUpdate = pendingUpdates.poll(); // Retrieve and remove the pending update
 
+            // Check if the pending update is for updating the threshold
+            if (pendingUpdate != null && pendingUpdate.getFillthreshold() != null) {
+                lastUpdatedThreshold = pendingUpdate; // Set as the last updated threshold
+            }
+        }
+
+        // Send the last updated threshold to the IoT device, if available
+        if (lastUpdatedThreshold != null) {
             try {
-                // Attempt to send pending update to the IoT device
-                updateBin(pendingUpdate);
+                updateBin(lastUpdatedThreshold); // Send the last updated threshold to the IoT device
             } catch (Exception e) {
                 // Handle exceptions or failed sending
-                System.err.println("Error sending pending update: " + e.getMessage());
+                System.err.println("Error sending last updated threshold: " + e.getMessage());
 
                 // If sending fails, add the pending update back to the queue for a retry later
-                pendingUpdates.offer(pendingUpdate);
+                pendingUpdates.offer(lastUpdatedThreshold);
             }
         }
     }
+
 
     /**
          * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.
