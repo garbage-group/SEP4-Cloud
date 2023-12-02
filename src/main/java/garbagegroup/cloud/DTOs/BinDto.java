@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.Temperature;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -21,10 +22,11 @@ public class BinDto {
     private int deviceId;
     private List<Humidity> humidity;
     private List<Level> fillLevels;
+    private List<Temperature> temperatures;
 
     public BinDto(){
     }
-    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels) {
+    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels, List<Temperature> temperatures) {
         this.id = id;
         this.longitude = longitude;
         this.latitude = latitude;
@@ -35,6 +37,7 @@ public class BinDto {
         this.deviceId = deviceId;
         this.humidity = humidity;
         this.fillLevels = fillLevels;
+        this.temperatures = temperatures;
     }
 
     public Double getLongitude() {
@@ -83,6 +86,15 @@ public class BinDto {
 
     public void setFillLevels(List<Level> fillLevels) {
         this.fillLevels = fillLevels;
+    }
+
+    @OneToMany
+    public List<Temperature> getTemperatures() {
+        return temperatures;
+    }
+
+    public void setTemperatures(List<Temperature> temperatures) {
+        this.temperatures = temperatures;
     }
 
     public Double getCapacity() {

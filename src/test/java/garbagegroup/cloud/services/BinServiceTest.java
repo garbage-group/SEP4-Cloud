@@ -2,30 +2,32 @@ package garbagegroup.cloud.services;
 
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
+import garbagegroup.cloud.model.Humidity;
+import garbagegroup.cloud.model.Level;
+import garbagegroup.cloud.model.Temperature;
 import garbagegroup.cloud.repository.IBinRepository;
-import garbagegroup.cloud.service.serviceImplementation.BinService;
-import static org.junit.jupiter.api.Assertions.*;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.service.serviceImplementation.BinService;
-import garbagegroup.cloud.tcpserver.ITCPServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.NoSuchElementException;
+
 
 @ExtendWith(MockitoExtension.class)
 public class BinServiceTest {
@@ -43,9 +45,201 @@ public class BinServiceTest {
 
     @BeforeEach
     void setUp() {
-        binRepository = mock(IBinRepository.class);
-        tcpServer = mock(ITCPServer.class);
-        binService = new BinService(binRepository, tcpServer);
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void GetCurrentSensorDataByBinId_WithBinWitchEmptyHumidityList_ReturnsFakeSensorData() {
+        //Arrange
+        Bin bin = new Bin();
+        bin.setId(1L);
+        bin.setDeviceId(1);
+        List<Humidity> humidityList = new ArrayList<>();
+        List<Level> levelList = new ArrayList<>();
+        List<Temperature> temperatureList = new ArrayList<>();
+        bin.setHumidity(humidityList);
+        bin.setFillLevels(levelList);
+        bin.setTemperatures(temperatureList);
+
+        //Mock
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        //Act
+        Optional<Humidity> humidityResult = binService.getCurrentHumidityByBinId(1L);
+        Optional<Level> levelResult = binService.getCurrentFillLevelByBinId(1L);
+        Optional<Temperature> temperatureResult = binService.getCurrentTemperatureByBinId(1L);
+
+        //Assert
+        assertEquals(26.0, humidityResult.get().getValue());
+        assertEquals(37.0, levelResult.get().getValue());
+        assertEquals(26.0, temperatureResult.get().getValue());
+    }
+
+    @Test
+    void GetCurrentSensorDataByBinId_WithNoBin_ReturnsEmptyOptionals() {
+        //Arrange
+        //Mock
+        when(binRepository.findById(1L)).thenReturn(Optional.empty());
+
+        //Act
+        Optional<Humidity> humidityResult = binService.getCurrentHumidityByBinId(1L);
+        Optional<Temperature> temperatureResult = binService.getCurrentTemperatureByBinId(1L);
+        Optional<Level> levelResult = binService.getCurrentFillLevelByBinId(1L);
+
+        //Assert
+        assertEquals(Optional.empty(), humidityResult);
+        assertEquals(Optional.empty(), temperatureResult);
+        assertEquals(Optional.empty(), levelResult);
+    }
+
+    @Test
+    void getCurrentSensorDataByBinId_WithRecentHumidity_ReturnsHumidity50Temperature69Level38() {
+        //Arrange
+        Bin bin = new Bin();
+        bin.setId(1L);
+
+        Humidity humidity = new Humidity();
+        humidity.setDateTime(LocalDateTime.now().minusMinutes(30));
+        humidity.setValue(50.0);
+        List<Humidity> humidityList = new ArrayList<>();
+        humidityList.add(humidity);
+        bin.setHumidity(humidityList);
+        Temperature temperature = new Temperature();
+        temperature.setDateTime(LocalDateTime.now().minusMinutes(30));
+        temperature.setValue(69.0);
+        List<Temperature> temperatureList = new ArrayList<>();
+        temperatureList.add(temperature);
+        bin.setTemperatures(temperatureList);
+        Level level = new Level();
+        level.setDateTime(LocalDateTime.now().minusMinutes(30));
+        level.setValue(38.0);
+        List<Level> levelList = new ArrayList<>();
+        levelList.add(level);
+        bin.setFillLevels(levelList);
+
+        //Mock
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        //Act
+        Optional<Humidity> humidityResult = binService.getCurrentHumidityByBinId(1L);
+        Optional<Temperature> temperatureResult = binService.getCurrentTemperatureByBinId(1L);
+        Optional<Level> levelResult = binService.getCurrentFillLevelByBinId(1L);
+
+        //Assert
+        assertEquals(50.0, humidityResult.get().getValue());
+        assertEquals(69.0, temperatureResult.get().getValue());
+        assertEquals(38.0, levelResult.get().getValue());
+    }
+
+    @Test
+    void getCurrentSensorDataByBinId_WithOldHumidity_ReturnsFakeRequestedSensorData() {
+        //Arrange
+        Bin bin = new Bin();
+        bin.setId(1L);
+        bin.setDeviceId(1);
+
+        Humidity humidity = new Humidity();
+        humidity.setDateTime(LocalDateTime.now().minusMinutes(90));
+        humidity.setValue(50.0);
+        List<Humidity> humidityList = new ArrayList<>();
+        humidityList.add(humidity);
+        bin.setHumidity(humidityList);
+        Temperature temperature = new Temperature();
+        temperature.setDateTime(LocalDateTime.now().minusMinutes(90));
+        temperature.setValue(69.0);
+        List<Temperature> temperatureList = new ArrayList<>();
+        temperatureList.add(temperature);
+        bin.setTemperatures(temperatureList);
+        Level level = new Level();
+        level.setDateTime(LocalDateTime.now().minusMinutes(90));
+        level.setValue(38.0);
+        List<Level> levelList = new ArrayList<>();
+        levelList.add(level);
+        bin.setFillLevels(levelList);
+
+        //Mocks
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        //Act
+        Optional<Humidity> humidityResult = binService.getCurrentHumidityByBinId(1L);
+        Optional<Temperature> temperatureResult = binService.getCurrentTemperatureByBinId(1L);
+        Optional<Level> levelResult = binService.getCurrentFillLevelByBinId(1L);
+
+        //Assert
+        assertEquals(26.0, humidityResult.get().getValue());
+        assertEquals(26.0, temperatureResult.get().getValue());
+        assertEquals(37.0, levelResult.get().getValue());
+    }
+
+    @Test
+    public void saveSensorDataByBinId_SuccessfulSave() {
+        // Arrange
+        int binId = 1;
+        double humidity = 50.0;
+        double temperature = 69.0;
+        double level = 37.0;
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        Bin bin = new Bin();
+        bin.setId((long) binId);
+
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(bin));
+
+        // Act
+        boolean humidityResult = binService.saveHumidityByBinId(binId, humidity, dateTime);
+        boolean temperatureResult = binService.saveTemperatureByBinId(binId, temperature, dateTime);
+        boolean levelResult = binService.saveFillLevelByBinId(binId, level, dateTime);
+
+        // Assert
+        assertTrue(humidityResult);
+        assertTrue(temperatureResult);
+        assertTrue(levelResult);
+    }
+
+    @Test
+    public void saveSensorDataByBinId_ThrowsExceptionBinNotFound() {
+        int binId = 1;
+        double humidity = 50.0;
+        double temperature = 69.0;
+        double level = 1.0;
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        when(binRepository.findById((long) binId)).thenReturn(Optional.empty());
+
+        // Act
+        boolean humidityResult = binService.saveHumidityByBinId(binId, humidity, dateTime);
+        boolean temperatureResult = binService.saveTemperatureByBinId(binId, temperature, dateTime);
+        boolean levelResult = binService.saveFillLevelByBinId(binId, level, dateTime);
+
+        // Assert
+        assertFalse(humidityResult);
+        assertFalse(temperatureResult);
+        assertFalse(levelResult);
+    }
+
+    @Test
+    public void saveSensorDataByBinId_ThrowsExceptionSensorDataNotSaved() {
+        int binId = 1;
+        double humidity = 50.0;
+        double temperature = 69.0;
+        double level = 1.0;
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        Bin bin = new Bin();
+        bin.setId((long) binId);
+
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(bin));
+        when(binRepository.save(any(Bin.class))).thenThrow(new RuntimeException("Sensor save error"));
+
+        // Act
+        boolean humidityResult = binService.saveHumidityByBinId(binId, humidity, dateTime);
+        boolean temperatureResult = binService.saveTemperatureByBinId(binId, temperature, dateTime);
+        boolean levelResult = binService.saveFillLevelByBinId(binId, level, dateTime);
+
+        // Assert
+        assertFalse(humidityResult);
+        assertFalse(temperatureResult);
+        assertFalse(levelResult);
     }
 
     @Test
@@ -139,10 +333,3 @@ public class BinServiceTest {
         assertFalse(binService.isValidThreshold(110.0)); // Test invalid threshold (110.0)
     }
 }
-
-
-//    @Test
-//    public void getHumidityById1Returns25() {
-//
-//    }
-//}
