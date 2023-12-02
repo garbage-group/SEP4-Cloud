@@ -33,4 +33,6 @@ public interface IBinService {
     void getIoTData(int binId, int deviceId, String payload);
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
+
+    List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
 }
