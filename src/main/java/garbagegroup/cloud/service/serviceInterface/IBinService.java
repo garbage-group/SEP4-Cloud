@@ -33,5 +33,4 @@ public interface IBinService {
     public int getAvailableDevice();
     void onDeviceConnected(int deviceId);
 
-//    void deviceStatusChanged(boolean isOnline);
 }

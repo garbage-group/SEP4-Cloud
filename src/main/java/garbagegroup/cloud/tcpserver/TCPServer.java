@@ -43,7 +43,7 @@ public class TCPServer implements ITCPServer, Runnable {
                 IoTDevices.add(socketHandler);
                 int serialNumber = getIoTSerialNumber();
                 socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
-                notifyDeviceConnected(serialNumber);
+                notifyDeviceConnected(serialNumber);      // Notify the listeners that a new device has connected
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
 
             } catch (IOException e) {
@@ -119,7 +119,6 @@ public class TCPServer implements ITCPServer, Runnable {
      * Adds a DeviceStatusListener to the list of listeners.
      * This method registers a listener to receive notifications related to device status changes.
      *
-     * @param listener The DeviceStatusListener to be added for status change notifications
      */
     @Override
     public void addDeviceStatusListener(DeviceStatusListener listener) {
@@ -129,10 +128,7 @@ public class TCPServer implements ITCPServer, Runnable {
     /**
      * Handles the event triggered when a device becomes connected or online.
      * This method contains the logic executed when a device establishes a connection,
-     * including printing a message indicating the device ID that has come online.
      * It further triggers the notification of connected devices to registered listeners.
-     *
-     * @param deviceId The identifier of the device that has become online
      */
     @Override
     public void onDeviceConnected(int deviceId) {
@@ -146,8 +142,6 @@ public class TCPServer implements ITCPServer, Runnable {
      * Notifies all registered listeners about the connection of a device.
      * Calls the 'onDeviceConnected' method for each registered listener,
      * providing the device ID that has been connected.
-     *
-     * @param deviceId The identifier of the device that has become online
      */
     private void notifyDeviceConnected(int deviceId) {
         for (DeviceStatusListener listener : deviceStatusListeners) {

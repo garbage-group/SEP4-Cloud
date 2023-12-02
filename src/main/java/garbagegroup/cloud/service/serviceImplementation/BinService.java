@@ -433,7 +433,6 @@ public class BinService implements IBinService, DeviceStatusListener {
             try {
                 updateBin(lastUpdatedThreshold); // Send the last updated threshold to the IoT device
             } catch (Exception e) {
-                // Handle exceptions or failed sending
                 System.err.println("Error sending last updated threshold: " + e.getMessage());
 
                 // If sending fails, add the pending update back to the queue for a retry later
