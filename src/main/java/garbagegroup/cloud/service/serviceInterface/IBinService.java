@@ -17,18 +17,19 @@ import java.util.Optional;
 public interface IBinService {
 
     Optional<Humidity> getCurrentHumidityByBinId(Long binId);
+    boolean saveHumidityByBinId(int binId, double humidity, LocalDateTime dateTime);      // Save to DB
     Optional<Temperature> getCurrentTemperatureByBinId(Long binId);
     Optional<Level> getCurrentFillLevelByBinId(Long binId);
-    public void saveHumidityById(int binId, double humidity, LocalDateTime dateTime);      // Save to DB
-    public void saveFillLevelById(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
-    public void setTCPServer(ITCPServer tcpServer);
+    boolean saveFillLevelByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
+    boolean saveTemperatureByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
+    void setTCPServer(ITCPServer tcpServer);
 
     void updateBin(UpdateBinDto updatedBinDto);
-    public void handleIoTData(int deviceId, String data);
-    public void deleteBinById(long binId);
-    public List<BinDto> findAllBins();
-    public Optional<BinDto> findBinById(Long id);
-    public void getIoTData(int binId, int deviceId, String payload);
-    public Bin create(CreateBinDTO binDTO);
-    public int getAvailableDevice();
+    void handleIoTData(int deviceId, String data);
+    void deleteBinById(long binId);
+    List<BinDto> findAllBins();
+    Optional<BinDto> findBinById(Long id);
+    void getIoTData(int binId, int deviceId, String payload);
+    Bin create(CreateBinDTO binDTO);
+    int getAvailableDevice();
 }
