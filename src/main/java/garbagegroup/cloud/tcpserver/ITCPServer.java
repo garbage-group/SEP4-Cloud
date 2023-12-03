@@ -11,6 +11,7 @@ public interface ITCPServer {
     public String getDataById(int deviceId, String payload);
     void startServer();
     public List<ServerSocketHandler> getIoTDevices();
-    void onDeviceConnected(int deviceId);
     void addDeviceStatusListener(DeviceStatusListener listener);
+//    void removeDeviceStatusListener(DeviceStatusListener listener);
+
 }

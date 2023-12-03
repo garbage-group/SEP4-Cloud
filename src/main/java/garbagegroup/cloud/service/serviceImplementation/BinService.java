@@ -464,6 +464,11 @@ public class BinService implements IBinService, DeviceStatusListener {
         }
     }
 
+    @Override
+    public void onDeviceDisconnected(int deviceId) {
+        System.out.println("Device " + deviceId + " is now offline!");
+    }
+
 
     /**
      * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.

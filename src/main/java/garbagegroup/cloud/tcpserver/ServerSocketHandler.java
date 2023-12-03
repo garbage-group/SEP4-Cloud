@@ -5,12 +5,11 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServerSocketHandler {
+public class ServerSocketHandler{
   private int deviceId;
   private Socket socket;
   private InputStream inFromClient;
   private OutputStream outToClient;
-  private Map<Integer, Boolean> connectedDevices = new HashMap<>(); // Map to store device ID and its online status
 
 
 
@@ -23,6 +22,9 @@ public class ServerSocketHandler {
       e.printStackTrace();
     }
   }
+
+
+
 
   public String sendMessage(String message) {
     try {
@@ -53,6 +55,7 @@ public class ServerSocketHandler {
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
+
 
 
 }

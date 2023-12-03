@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class TCPServer implements ITCPServer, Runnable {
+public class    TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
     List<ServerSocketHandler> IoTDevices = new ArrayList<>();
@@ -122,17 +122,6 @@ public class TCPServer implements ITCPServer, Runnable {
         deviceStatusListeners.add(listener);
     }
 
-    /**
-     * Handles the event triggered when a device becomes connected or online.
-     * This method contains the logic executed when a device establishes a connection,
-     * It further triggers the notification of connected devices to registered listeners.
-     */
-    @Override
-    public void onDeviceConnected(int deviceId) {
-        // Logic to handle when a device becomes online
-        System.out.println("Device " + deviceId + " is now online!");
-        notifyDeviceConnected(deviceId);
-    }
 
 
     /**
@@ -145,6 +134,14 @@ public class TCPServer implements ITCPServer, Runnable {
             listener.onDeviceConnected(deviceId);
         }
     }
+
+    private void notifyDeviceDisconnected(int deviceId) {
+        for (DeviceStatusListener listener : deviceStatusListeners) {
+            listener.onDeviceDisconnected(deviceId);
+        }
+    }
+
+
 
 
 }
