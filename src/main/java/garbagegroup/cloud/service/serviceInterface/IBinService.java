@@ -24,15 +24,14 @@ public interface IBinService {
     boolean saveFillLevelByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     boolean saveTemperatureByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     void setTCPServer(ITCPServer tcpServer);
-
     void updateBin(UpdateBinDto updatedBinDto);
     void handleIoTData(int deviceId, String data);
     void deleteBinById(long binId);
     List<BinDto> findAllBins();
     Optional<BinDto> findBinById(Long id);
-    void getIoTData(int binId, int deviceId, String payload);
+    String getIoTData(int binId, int deviceId, String payload);
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
-
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
+    String getDeviceStatusByBinId(Long binId);
 }

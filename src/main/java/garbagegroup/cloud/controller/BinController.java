@@ -147,8 +147,6 @@ public class BinController {
         }
     }
 
-
-
     @GetMapping("/notification")
     public ResponseEntity<List<NotificationBinDto>> getBinsWithThresholdLessThanFillLevel() {
         try {
@@ -156,6 +154,20 @@ public class BinController {
             return new ResponseEntity<>(bins, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error occurred while fetching all bins", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{binId}/device_status")
+    public ResponseEntity<String> getDeviceStatusByBinId(@PathVariable Long binId) {
+        try {
+            String status = binService.getDeviceStatusByBinId(binId);
+            return new ResponseEntity<>(status, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching device's status on bin with ID: " + binId, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
