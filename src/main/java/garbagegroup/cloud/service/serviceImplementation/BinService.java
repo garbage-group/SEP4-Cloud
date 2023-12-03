@@ -37,7 +37,8 @@ public class BinService implements IBinService, DeviceStatusListener {
 
     }
 
-    public BinService() {}
+    public BinService() {
+    }
 
     /**
      * Fetches SensorData from the IoT device
@@ -119,12 +120,13 @@ public class BinService implements IBinService, DeviceStatusListener {
      * @return
      */
     @Override
-    public void getIoTData(int binId, int deviceId, String payload) {
+    public String getIoTData(int binId, int deviceId, String payload) {
+        String responseFromIoT = "";
         if (hasActiveDevice(deviceId)) {    // Fetch real data from IoT device
-            String responseFromIoT = tcpServer.getDataById(deviceId, payload);
+            responseFromIoT = tcpServer.getDataById(deviceId, payload);
             handleIoTData(binId, responseFromIoT);
-        }
-        else loadFakeIoTDeviceData(binId, payload);     // Or load some fake data
+        } else loadFakeIoTDeviceData(binId, payload);     // Or load some fake data
+        return responseFromIoT;
     }
 
     /**
@@ -146,8 +148,7 @@ public class BinService implements IBinService, DeviceStatusListener {
                 List<Humidity> humidityList = new ArrayList<>();
                 humidityList.add(newHumidity);
                 bin.setHumidity(humidityList);
-            }
-            else bin.getHumidity().add(newHumidity);
+            } else bin.getHumidity().add(newHumidity);
 
             try {
                 binRepository.save(bin);
@@ -189,7 +190,7 @@ public class BinService implements IBinService, DeviceStatusListener {
                 System.err.println("Error saving fill level with Bin Id: " + binId + ".\n" + e.getMessage());
                 return false;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
             return false;
         }
@@ -278,7 +279,7 @@ public class BinService implements IBinService, DeviceStatusListener {
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
         List<BinDto> binDtos = new ArrayList<BinDto>();
-        for (Bin bin: bins) {
+        for (Bin bin : bins) {
             BinDto dto = dtoConverter.convertToBinDto(bin);
             binDtos.add(dto);
         }
@@ -380,10 +381,10 @@ public class BinService implements IBinService, DeviceStatusListener {
     /**
      * Sets the fill threshold data to be sent to the IoT device with the specified payload.
      *
-     * @param payload        The payload indicating the type of data being sent to the IoT device
-     * @param fillThreshold  The fill threshold value to be communicated to the IoT device
+     * @param payload       The payload indicating the type of data being sent to the IoT device
+     * @param fillThreshold The fill threshold value to be communicated to the IoT device
      */
-    private void setIotData(String payload,double fillThreshold) {
+    private void setIotData(String payload, double fillThreshold) {
         try {
             // Communicate the fill threshold data to the IoT device
             String responseFromIoT = tcpServer.setFillThreshold(fillThreshold);
@@ -439,20 +440,24 @@ public class BinService implements IBinService, DeviceStatusListener {
     @Override
     public void onDeviceConnected(int deviceId) {
         System.out.println("Device " + deviceId + " is now online!");
+        sendPendingUpdates(deviceId);
+    }
 
-        // Check if there are pending updates
+    private void sendPendingUpdates(int deviceId) {
+        // Check if there are pending updates for the device
         UpdateBinDto lastUpdatedThreshold = null;
+        boolean isActiveDevice = hasActiveDevice(deviceId);
+
         while (!pendingUpdates.isEmpty()) {
             UpdateBinDto pendingUpdate = pendingUpdates.poll(); // Retrieve and remove the pending update
 
-            // Check if the pending update is for updating the threshold
             if (pendingUpdate != null && pendingUpdate.getFillthreshold() != null) {
                 lastUpdatedThreshold = pendingUpdate; // Set as the last updated threshold
             }
         }
 
-        // Send the last updated threshold to the IoT device, if available
-        if (lastUpdatedThreshold != null) {
+        // Send the last updated threshold to the IoT device, if available and the device is active
+        if (isActiveDevice && lastUpdatedThreshold != null) {
             try {
                 updateBin(lastUpdatedThreshold); // Send the last updated threshold to the IoT device
             } catch (Exception e) {
@@ -464,10 +469,6 @@ public class BinService implements IBinService, DeviceStatusListener {
         }
     }
 
-    @Override
-    public void onDeviceDisconnected(int deviceId) {
-        System.out.println("Device " + deviceId + " is now offline!");
-    }
 
 
     /**
@@ -539,7 +540,7 @@ public class BinService implements IBinService, DeviceStatusListener {
      * generating notification data for each such bin.
      *
      * @return List of NotificationBinDto objects representing bins with fill levels
-     *         surpassing their threshold.
+     * surpassing their threshold.
      */
     @Override
     public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
@@ -571,6 +572,20 @@ public class BinService implements IBinService, DeviceStatusListener {
         return notifications;
     }
 
+    @Override
+    public boolean getDeviceStatusByBinId(Long binId) {
+        Optional<Bin> binOptional = binRepository.findById(binId);
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
+            // Send fill threshold data to the IoT device
+
+            String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
+            if (response.equals("statu:OK")) return true;
+            else if (response.equals("statu:NOT OK")) return false;
+            else throw new NoSuchElementException("The device on bin " + binId + " is offline");
+        }
+        else throw new NoSuchElementException("Bin with id " + binId + " not found");
+    }
 
     private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(
@@ -582,8 +597,7 @@ public class BinService implements IBinService, DeviceStatusListener {
     }
 
 
-
-    }
+}
 
 
 

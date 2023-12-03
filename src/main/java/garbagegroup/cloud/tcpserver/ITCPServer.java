@@ -12,6 +12,5 @@ public interface ITCPServer {
     void startServer();
     public List<ServerSocketHandler> getIoTDevices();
     void addDeviceStatusListener(DeviceStatusListener listener);
-//    void removeDeviceStatusListener(DeviceStatusListener listener);
 
 }

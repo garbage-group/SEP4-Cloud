@@ -53,8 +53,6 @@ public class    TCPServer implements ITCPServer, Runnable {
         }
     }
 
-
-
     @Override
     public void startServer() {
         new Thread(this).start();
@@ -134,14 +132,6 @@ public class    TCPServer implements ITCPServer, Runnable {
             listener.onDeviceConnected(deviceId);
         }
     }
-
-    private void notifyDeviceDisconnected(int deviceId) {
-        for (DeviceStatusListener listener : deviceStatusListeners) {
-            listener.onDeviceDisconnected(deviceId);
-        }
-    }
-
-
 
 
 }

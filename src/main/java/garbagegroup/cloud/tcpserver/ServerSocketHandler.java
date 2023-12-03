@@ -24,8 +24,6 @@ public class ServerSocketHandler{
   }
 
 
-
-
   public String sendMessage(String message) {
     try {
       System.out.println("Sending " + message + " to device with ID: " + deviceId);
@@ -55,7 +53,6 @@ public class ServerSocketHandler{
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
-
 
 
 }
