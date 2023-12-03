@@ -161,8 +161,9 @@ public class BinController {
     @GetMapping("/{binId}/device_status")
     public ResponseEntity<String> getDeviceStatusByBinId(@PathVariable Long binId) {
         try {
-            String status = binService.getDeviceStatusByBinId(binId);
-            return new ResponseEntity<>(status, HttpStatus.OK);
+            if (binService.getDeviceStatusByBinId(binId)) {
+                return new ResponseEntity<>("The device is online and running with no issues", HttpStatus.OK);
+            } else return new ResponseEntity<>("The device on bin " + binId + " needs attention! Some of the sensors are not working.", HttpStatus.NOT_FOUND);
         } catch (NoSuchElementException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

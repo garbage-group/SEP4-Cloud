@@ -528,19 +528,19 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public String getDeviceStatusByBinId(Long binId) {
+    public boolean getDeviceStatusByBinId(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
             // Send fill threshold data to the IoT device
+
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
-            if (response.equals("statu:OK")) return "The device is online and running with no issues";
-            else if (response.equals("statu:NOT OK")) throw new NoSuchElementException("The device on bin " + binId + " needs attention! Some of the sensors are not working.");
+            if (response.equals("statu:OK")) return true;
+            else if (response.equals("statu:NOT OK")) return false;
             else throw new NoSuchElementException("The device on bin " + binId + " is offline");
         }
         else throw new NoSuchElementException("Bin with id " + binId + " not found");
     }
-
 
     private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(

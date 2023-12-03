@@ -33,5 +33,5 @@ public interface IBinService {
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
-    String getDeviceStatusByBinId(Long binId);
+    boolean getDeviceStatusByBinId(Long binId);
 }
