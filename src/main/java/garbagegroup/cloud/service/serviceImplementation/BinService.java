@@ -11,6 +11,7 @@ import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -33,7 +34,8 @@ public class BinService implements IBinService {
         this.setTCPServer(tcpServer);
     }
 
-    public BinService() {}
+    public BinService() {
+    }
 
     /**
      * Fetches SensorData from the IoT device
@@ -115,12 +117,13 @@ public class BinService implements IBinService {
      * @return
      */
     @Override
-    public void getIoTData(int binId, int deviceId, String payload) {
+    public String getIoTData(int binId, int deviceId, String payload) {
+        String responseFromIoT = "";
         if (hasActiveDevice(deviceId)) {    // Fetch real data from IoT device
-            String responseFromIoT = tcpServer.getDataById(deviceId, payload);
+            responseFromIoT = tcpServer.getDataById(deviceId, payload);
             handleIoTData(binId, responseFromIoT);
-        }
-        else loadFakeIoTDeviceData(binId, payload);     // Or load some fake data
+        } else loadFakeIoTDeviceData(binId, payload);     // Or load some fake data
+        return responseFromIoT;
     }
 
     /**
@@ -142,8 +145,7 @@ public class BinService implements IBinService {
                 List<Humidity> humidityList = new ArrayList<>();
                 humidityList.add(newHumidity);
                 bin.setHumidity(humidityList);
-            }
-            else bin.getHumidity().add(newHumidity);
+            } else bin.getHumidity().add(newHumidity);
 
             try {
                 binRepository.save(bin);
@@ -185,7 +187,7 @@ public class BinService implements IBinService {
                 System.err.println("Error saving fill level with Bin Id: " + binId + ".\n" + e.getMessage());
                 return false;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.err.println("Error finding bin with Id: " + binId + ".\n" + e.getMessage());
             return false;
         }
@@ -274,7 +276,7 @@ public class BinService implements IBinService {
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
         List<BinDto> binDtos = new ArrayList<BinDto>();
-        for (Bin bin: bins) {
+        for (Bin bin : bins) {
             BinDto dto = dtoConverter.convertToBinDto(bin);
             binDtos.add(dto);
         }
@@ -345,7 +347,6 @@ public class BinService implements IBinService {
     }
 
 
-
     /**
      * This function saves fakes IoT data for a non-existent IoT device
      *
@@ -378,10 +379,10 @@ public class BinService implements IBinService {
     /**
      * Sets the fill threshold data to be sent to the IoT device with the specified payload.
      *
-     * @param payload        The payload indicating the type of data being sent to the IoT device
-     * @param fillThreshold  The fill threshold value to be communicated to the IoT device
+     * @param payload       The payload indicating the type of data being sent to the IoT device
+     * @param fillThreshold The fill threshold value to be communicated to the IoT device
      */
-    private void setIotData(String payload,double fillThreshold) {
+    private void setIotData(String payload, double fillThreshold) {
         try {
             // Communicate the fill threshold data to the IoT device
             String responseFromIoT = tcpServer.setFillThreshold(fillThreshold);
@@ -412,12 +413,11 @@ public class BinService implements IBinService {
                 boolean isActiveDevice = hasActiveDevice(deviceId);
 
                 if (isActiveDevice) {
-                        binRepository.save(bin);
-                        // Send fill threshold data to the IoT device
-                        setIotData("setFillThreshold("+updatedBinDto.getFillthreshold()+")", updatedBinDto.getFillthreshold());
-                    }
-                    else {
-                        binRepository.save(bin);
+                    binRepository.save(bin);
+                    // Send fill threshold data to the IoT device
+                    setIotData("setFillThreshold(" + updatedBinDto.getFillthreshold() + ")", updatedBinDto.getFillthreshold());
+                } else {
+                    binRepository.save(bin);
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException(e.getMessage());
@@ -430,10 +430,10 @@ public class BinService implements IBinService {
      * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.
      * Validates and sets the longitude, latitude, and fill threshold values for the Bin.
      *
-     * @param bin            The Bin object to be updated
-     * @param updatedBinDto  The DTO containing updated values for the Bin
+     * @param bin           The Bin object to be updated
+     * @param updatedBinDto The DTO containing updated values for the Bin
      * @throws IllegalArgumentException if the provided longitude, latitude, or fill threshold is invalid
-     *         or if the fill threshold is lower than the last recorded level reading
+     *                                  or if the fill threshold is lower than the last recorded level reading
      */
     public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
@@ -495,7 +495,7 @@ public class BinService implements IBinService {
      * generating notification data for each such bin.
      *
      * @return List of NotificationBinDto objects representing bins with fill levels
-     *         surpassing their threshold.
+     * surpassing their threshold.
      */
     @Override
     public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
@@ -527,6 +527,20 @@ public class BinService implements IBinService {
         return notifications;
     }
 
+    @Override
+    public boolean getDeviceStatusByBinId(Long binId) {
+        Optional<Bin> binOptional = binRepository.findById(binId);
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
+            // Send fill threshold data to the IoT device
+
+            String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
+            if (response.equals("statu:OK")) return true;
+            else if (response.equals("statu:NOT OK")) return false;
+            else throw new NoSuchElementException("The device on bin " + binId + " is offline");
+        }
+        else throw new NoSuchElementException("Bin with id " + binId + " not found");
+    }
 
     private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(
@@ -538,8 +552,7 @@ public class BinService implements IBinService {
     }
 
 
-
-    }
+}
 
 
 
