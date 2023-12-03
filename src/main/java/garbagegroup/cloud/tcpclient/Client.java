@@ -74,7 +74,7 @@ public class Client {
                     outToServer.flush();
                 }
                 else if (result.equals("getStatus")) {
-                    outToServer.write("OK".getBytes());
+                    outToServer.write("statu:OK".getBytes());
                     outToServer.flush();
                 }
             }

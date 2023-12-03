@@ -534,8 +534,8 @@ public class BinService implements IBinService {
             Bin bin = binOptional.get();
             // Send fill threshold data to the IoT device
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
-            if (response.equals("OK")) return "The device is online and running with no issues";
-            else if (response.equals("NOT OK")) return "The device on bin " + binId + " needs attention! Some of the sensors are not working.";
+            if (response.equals("statu:OK")) return "The device is online and running with no issues";
+            else if (response.equals("statu:NOT OK")) throw new NoSuchElementException("The device on bin " + binId + " needs attention! Some of the sensors are not working.");
             else throw new NoSuchElementException("The device on bin " + binId + " is offline");
         }
         else throw new NoSuchElementException("Bin with id " + binId + " not found");
