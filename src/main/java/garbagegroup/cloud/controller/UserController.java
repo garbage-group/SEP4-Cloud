@@ -56,7 +56,6 @@ public class UserController {
         }
     }
 
-        @PreAuthorize("hasRole('municipality worker')")
         @PatchMapping("/users/{username}")
         public ResponseEntity<UpdateUserDto> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
             try {
@@ -69,30 +68,5 @@ public class UserController {
             } catch (Exception e) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-
         }
-
-//    @PatchMapping("/users/{username}")
-//    @PreAuthorize("hasRole(userService.fetchUserByUsername(userDto.username).equals('municipality worker'))")
-//    public ResponseEntity<UpdateUserDto> updateUser(
-//            @PathVariable("username") String username,@RequestBody UpdateUserDto userDto,
-//            Authentication authentication) {
-//        try {
-//                if (authentication.getAuthorities().stream()
-//                        .anyMatch(grantedAuthority ->
-//                                grantedAuthority.getAuthority().equalsIgnoreCase("municipality worker"))) {
-//                    // If the user doesn't have the required role, deny access
-//                    User user = userService.fetchUserByUsername(username);
-//                    user.setFullname(userDto.getFullname());
-//                    user.setPassword(userDto.getPassword());
-//                    user.setRegion(userDto.getRegion());
-//                    userService.updateUser(user);
-//                    return new ResponseEntity<>(userDto, HttpStatus.OK);
-//                } else {
-//                    return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//                }
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//    }
 }
