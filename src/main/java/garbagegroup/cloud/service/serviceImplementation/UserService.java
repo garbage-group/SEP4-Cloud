@@ -1,13 +1,14 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
 
+import garbagegroup.cloud.DTOs.CreateUserDto;
+import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
-import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,16 +20,16 @@ import org.springframework.stereotype.Service;
 public class UserService implements IUserService {
 
     private final JwtService jwtService;
-    private IUserRepository IUserRepository;
+    private IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
 
 
     @Autowired
-    public UserService(JwtService jwtService, IUserRepository IUserRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public UserService(JwtService jwtService, IUserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
-        this.IUserRepository = IUserRepository;
+        this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
 
@@ -49,7 +50,7 @@ public class UserService implements IUserService {
 
     @Override
     public User fetchUserByUsername(String username) {
-        User user = IUserRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
         if (user != null) {
             System.out.println("from service"+user.getUsername());
             return user;
@@ -66,7 +67,7 @@ public class UserService implements IUserService {
                         request.getPassword()
                 )
         );
-        var user = IUserRepository.findByUsername(request.getUsername());
+        var user = userRepository.findByUsername(request.getUsername());
 
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
@@ -74,5 +75,18 @@ public class UserService implements IUserService {
                 .build();
     }
 
-
+    /**
+     * Converts UserDTO to User model object and encodes the password before saving to database
+     * @param createUserDto
+     * @return saved User
+     */
+    public User create(CreateUserDto createUserDto) {
+        User user = DTOConverter.createUserDtoToUser(createUserDto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if(user.getRole().equalsIgnoreCase("garbage collector")) {
+            return userRepository.save(user);
+        } else {
+            throw new IllegalArgumentException("Only Garbage Collectors can be created");
+        }
+    }
 }

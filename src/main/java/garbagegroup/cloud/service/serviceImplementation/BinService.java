@@ -26,7 +26,6 @@ public class BinService implements IBinService {
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
-        this.dtoConverter = new DTOConverter();
 
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
@@ -275,7 +274,8 @@ public class BinService implements IBinService {
         List<Bin> bins = binRepository.findAll();
         List<BinDto> binDtos = new ArrayList<BinDto>();
         for (Bin bin: bins) {
-            BinDto dto = dtoConverter.convertToBinDto(bin);
+            BinDto dto = DTOConverter.convertToBinDto(bin);
+
             binDtos.add(dto);
         }
         return binDtos;

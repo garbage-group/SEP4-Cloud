@@ -1,7 +1,6 @@
 package garbagegroup.cloud.services;
 
 import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -31,9 +30,6 @@ import java.util.NoSuchElementException;
 
 @ExtendWith(MockitoExtension.class)
 public class BinServiceTest {
-
-    private DTOConverter dtoConverter = new DTOConverter();
-
     @Mock
     private IBinRepository binRepository;
 
