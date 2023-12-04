@@ -1,6 +1,7 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
 
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
@@ -55,6 +56,23 @@ public class UserService implements IUserService {
             return user;
         } else {
             throw new RuntimeException("User with username " + username + " not found");
+        }
+    }
+
+    @Override
+    public void updateUser(UpdateUserDto user) {
+        try {
+            User userToUpdate = IUserRepository.findByUsername(user.getUsername());
+            if (userToUpdate != null) {
+                userToUpdate.setPassword(this.passwordEncoder.encode(user.getPassword()));
+                userToUpdate.setFullname(user.getFullname());
+                userToUpdate.setRegion(user.getRegion());
+
+                // Save the updated user to the database
+                IUserRepository.save(userToUpdate);
+        }
+        } catch (Exception e) {
+            throw new RuntimeException("User with username " + user.getUsername() + " not found");
         }
     }
 
