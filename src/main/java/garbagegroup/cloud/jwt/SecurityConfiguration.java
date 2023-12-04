@@ -15,7 +15,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 
 import static org.springframework.security.config.Customizer.withDefaults;
-
+/**
+ * Configuration class responsible for setting up security configurations and defining security filter chains.
+ */
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +26,13 @@ public class SecurityConfiguration{
     private final JwtAuthenticationFilter jwtAuthFilter;
 
 
+    /**
+     * Configures the security filter chain for various HTTP endpoints and methods.
+     *
+     * @param http The HttpSecurity object to configure security settings.
+     * @return The configured SecurityFilterChain for handling security within the application.
+     * @throws Exception If an exception occurs during security configuration setup.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.cors(withDefaults())

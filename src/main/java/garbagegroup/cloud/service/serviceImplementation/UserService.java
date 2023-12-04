@@ -43,7 +43,13 @@ public class UserService implements IUserService {
 //        IUserRepository.save(user);
     }
 
-
+    /**
+     * Fetches user details from the repository based on the provided username.
+     *
+     * @param username The username of the user to be fetched.
+     * @return The User object corresponding to the provided username.
+     * @throws RuntimeException If the user with the given username is not found in the repository.
+     */
     @Override
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
@@ -54,6 +60,13 @@ public class UserService implements IUserService {
         }
     }
 
+    /**
+     * Updates user information based on the provided UpdateUserDto.
+     * If the user is found by username, the information (password, fullname, region) will be updated and saved to the database.
+     *
+     * @param user The UpdateUserDto containing the updated user information.
+     * @throws RuntimeException If the user with the given username is not found or if an unexpected exception occurs during the update process.
+     */
     @Override
     public void updateUser(UpdateUserDto user) {
         try {
@@ -71,6 +84,12 @@ public class UserService implements IUserService {
         }
     }
 
+    /**
+        * Fetches all users from the database.
+        *
+        * @return A list of UserDto objects.
+        * @throws RuntimeException If no users are found.
+        */
     @Override
     public List<UserDto> fetchAllUsers() {
         List<User> users = userRepository.findAll();
@@ -84,6 +103,14 @@ public class UserService implements IUserService {
         return userDtos;
     }
 
+
+    /**
+     * Authenticates a user based on the provided UserDto credentials.
+     *
+     * @param request The UserDto containing the username and password for authentication.
+     * @return An AuthenticationResponse containing the generated JWT token upon successful authentication.
+     * @throws RuntimeException      If the user is not found after authentication.
+     */
     public AuthenticationResponse authenticate(UserDto request) {
 
         authenticationManager.authenticate(
