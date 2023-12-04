@@ -33,14 +33,13 @@ public class UserController {
     public UserController(IUserService userService, UserService service) {
         this.userService = userService;
         this.service = service;
-        this.dtoConverter = new DTOConverter();
     }
 
     @GetMapping("/{username}")
     public ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("username") String username) {
         try {
             User user = userService.fetchUserByUsername(username);
-            UserDto userDto = dtoConverter.convertToUserDto(user); // Call the convertToUserDto method from UserService
+            UserDto userDto = DTOConverter.convertToUserDto(user); // Call the convertToUserDto method from UserService
             return new ResponseEntity<>(userDto, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -63,10 +62,10 @@ public class UserController {
             User user = userService.create(createUserDto);
             return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (DuplicateKeyException e) {
-            logger.error(e.getMessage(), e);
+            logger.error(e.getMessage());
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         } catch (IllegalArgumentException e) {
-            logger.error(e.getMessage(), e);
+            logger.error(e.getMessage());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

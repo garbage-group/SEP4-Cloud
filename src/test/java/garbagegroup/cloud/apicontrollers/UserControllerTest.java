@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -158,6 +159,27 @@ public class UserControllerTest {
 
         //Assert
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void createUser_WhoAlreadyExists_ReturnsConflictResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "admin",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(DuplicateKeyException.class);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
     }
     
     public void fetchAllUsers_ThrowsException_ReturnsBadRequest() {

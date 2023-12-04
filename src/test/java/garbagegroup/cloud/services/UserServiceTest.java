@@ -14,8 +14,11 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
@@ -80,5 +83,32 @@ public class UserServiceTest {
 
         // Act and assert
         assertThrows(IllegalArgumentException.class, () -> userService.create(createUserDto));
+    }
+
+    @Test
+    public void create_UserWithExistingUsername_throwsDuplicateException() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "admin",
+                "Tester Testington",
+                "testword",
+                "Harry Tester",
+                "testion"
+        );
+        User user = new User(
+                "admin",
+                "Tester Testington",
+                "testword",
+                "Harry Tester",
+                "testion"
+        );
+        List<User> users = new ArrayList<>();
+        users.add(user);
+
+        //Mock
+        when(userRepository.findAll()).thenReturn(users);
+
+        // Act and assert
+        assertThrows(DuplicateKeyException.class, () -> userService.create(createUserDto));
     }
 }
