@@ -3,6 +3,7 @@ package garbagegroup.cloud.services;
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
 import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -257,6 +258,42 @@ public class BinServiceTest {
 
         assertFalse(binService.isValidLongitude(-190.0)); // Test invalid longitude (-190.0)
         assertFalse(binService.isValidLongitude(190.0)); // Test invalid longitude (190.0)
+    }
+
+    @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLongitude() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 1000D, 40D, 40D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
+    }
+
+    @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLatitude() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 1000D, 40D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
+    }
+
+    @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidFillThreshold() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 40D, 180D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
     }
 
     @Test
@@ -570,28 +607,47 @@ public class BinServiceTest {
     }
 
     @Test
-    void testSetIotData_SuccessfulCommunication() {
-        // Arrange
-        double fillThreshold = 70.0;
-        String expectedResponse = "Success";
-        when(tcpServer.setFillThreshold(fillThreshold)).thenReturn(expectedResponse);
+    public void updateBin_WithNonExistingBinToUpdate_ThrowsNoSuchElementException() {
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
 
-        // Act
-        binService.setIotData(fillThreshold);
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.empty());
 
-        // Assert
-        verify(tcpServer, times(1)).setFillThreshold(fillThreshold);
+        // Act and assert
+        assertThrows(NoSuchElementException.class, () -> binService.updateBin(updateBinDto));
     }
 
     @Test
-    void testSetIotData_ErrorCommunication() {
-        // Arrange
-        double fillThreshold = 70.0;
-        String errorMessage = "Communication Error";
-        when(tcpServer.setFillThreshold(fillThreshold)).thenThrow(new RuntimeException(errorMessage));
+    public void updateBin_DatabaseError_ReturnsFalse() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
+        Bin bin = new Bin(40D, 20D, null, 80D, null, null);
 
-        // Act
-        binService.setIotData(fillThreshold);
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.of(bin));
+        when(binRepository.save(any(Bin.class))).thenThrow(IllegalArgumentException.class);
+
+        //Act
+        boolean result = binService.updateBin(updateBinDto);
+
+        // Act and assert
+        assertFalse(result);
+    }
+
+    @Test
+    public void updateBin_SuccessfulUpdate_ReturnsTrue() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
+        Bin bin = new Bin(40D, 20D, null, 80D, null, null);
+
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.of(bin));
+
+        //Act
+        boolean result = binService.updateBin(updateBinDto);
+
+        // Act and assert
+        assertTrue(result);
     }
 
 

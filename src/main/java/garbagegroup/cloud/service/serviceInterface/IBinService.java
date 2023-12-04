@@ -25,7 +25,7 @@ public interface IBinService {
     boolean saveTemperatureByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     void setTCPServer(ITCPServer tcpServer);
 
-    void updateBin(UpdateBinDto updatedBinDto);
+    boolean updateBin(UpdateBinDto updatedBinDto);
     void handleIoTData(int deviceId, String data);
     void deleteBinById(long binId);
     List<BinDto> findAllBins();
