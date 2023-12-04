@@ -33,4 +33,14 @@ public class DTOConverter {
                 createUserDto.getRole(),
                 createUserDto.getRegion());
     }
+
+    public static UserDto convertToUserDto(User user){
+        UserDto dto = new UserDto();
+        dto.setUsername(user.getUsername());
+        dto.setPassword(user.getPassword());
+        dto.setFullname(user.getFullname());
+        dto.setRole(user.getRole());
+        dto.setRegion(user.getRegion());
+        return dto;
+    }
 }

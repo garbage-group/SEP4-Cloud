@@ -30,9 +30,11 @@ public interface IBinService {
     void deleteBinById(long binId);
     List<BinDto> findAllBins();
     Optional<BinDto> findBinById(Long id);
-    void getIoTData(int binId, int deviceId, String payload);
+    String getIoTData(int binId, int deviceId, String payload);
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
 
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
+
+    boolean getDeviceStatusByBinId(Long binId);
 }

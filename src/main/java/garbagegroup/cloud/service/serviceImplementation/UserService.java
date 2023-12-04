@@ -15,6 +15,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Service
 public class UserService implements IUserService {
@@ -23,6 +26,7 @@ public class UserService implements IUserService {
     private IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private DTOConverter dtoConverter;
 
 
 
@@ -32,31 +36,35 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.dtoConverter = new DTOConverter();
 
-//        User user = new User("garbage", "password", "garbage", "garbage collector", "horsens");
+//        User user = new User("admin", "password", "admin", "municipality worker", "horsens");
 //        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 //        IUserRepository.save(user);
     }
 
-    public UserDto convertToUserDto(User user) {
-        UserDto userDto = new UserDto();
-        userDto.setUsername(user.getUsername());
-        userDto.setPassword(user.getPassword());
-        userDto.setRole(user.getRole());
-        userDto.setFullname(user.getFullname());
-
-        return userDto;
-    }
 
     @Override
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
-            System.out.println("from service"+user.getUsername());
             return user;
         } else {
             throw new RuntimeException("User with username " + username + " not found");
         }
+    }
+
+    @Override
+    public List<UserDto> fetchAllUsers() {
+        List<User> users = IUserRepository.findAll();
+        List<UserDto> userDtos= new ArrayList<>();
+        if (users.isEmpty()) {
+            throw new RuntimeException("No users found");
+        }
+        for (User user : users) {
+            userDtos.add(dtoConverter.convertToUserDto(user));
+        }
+        return userDtos;
     }
 
     public AuthenticationResponse authenticate(UserDto request) {
