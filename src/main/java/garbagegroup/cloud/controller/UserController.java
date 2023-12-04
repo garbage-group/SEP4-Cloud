@@ -67,7 +67,7 @@ public class UserController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             logger.error("Error occurred while deleting bin with ID: " + username, e);
-            return new ResponseEntity<>("Error occurred while deleting bin with ID: " + username, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error occurred while deleting user with username: " + username, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
