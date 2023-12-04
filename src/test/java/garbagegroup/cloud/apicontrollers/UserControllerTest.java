@@ -1,5 +1,6 @@
 package garbagegroup.cloud.apicontrollers;
 
+import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.controller.UserController;
 import garbagegroup.cloud.DTOs.UserDto;
@@ -10,7 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -107,6 +112,76 @@ public class UserControllerTest {
     }
 
     @Test
+    public void createUser_WhoIsGarbageCollector_ReturnsUserAndOKResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Garbage Collector",
+                "Testion"
+        );
+        User user = new User(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Garbage Collector",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenReturn(user);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(user, responseEntity.getBody());
+    }
+
+    @Test
+    public void createUser_WhoIsNotGarbageCollector_ReturnBadRequestResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(IllegalArgumentException.class);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void createUser_WhoAlreadyExists_ReturnsConflictResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "admin",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(DuplicateKeyException.class);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
+    }
+    
     public void fetchAllUsers_ThrowsException_ReturnsBadRequest() {
         // Mock behavior to throw an exception
         when(userService.fetchAllUsers()).thenThrow(new RuntimeException("Error retrieving users"));

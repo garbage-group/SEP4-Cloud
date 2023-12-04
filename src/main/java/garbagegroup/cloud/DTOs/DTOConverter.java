@@ -5,9 +5,11 @@ import garbagegroup.cloud.model.User;
 
 public class DTOConverter {
 
-    public DTOConverter() {
+    private DTOConverter() {
+
     }
-    public BinDto convertToBinDto(Bin bin){
+
+    public static BinDto convertToBinDto(Bin bin){
         BinDto dto = new BinDto();
         dto.setId(bin.getId());
         dto.setLongitude(bin.getLongitude());
@@ -23,7 +25,16 @@ public class DTOConverter {
         return dto;
     }
 
-    public UserDto convertToUserDto(User user){
+    public static User createUserDtoToUser(CreateUserDto createUserDto) {
+        return new User(
+                createUserDto.getUsername(),
+                createUserDto.getPassword(),
+                createUserDto.getFullName(),
+                createUserDto.getRole(),
+                createUserDto.getRegion());
+    }
+
+    public static UserDto convertToUserDto(User user){
         UserDto dto = new UserDto();
         dto.setUsername(user.getUsername());
         dto.setPassword(user.getPassword());
