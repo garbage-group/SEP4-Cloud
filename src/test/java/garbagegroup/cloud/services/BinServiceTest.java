@@ -2,7 +2,6 @@ package garbagegroup.cloud.services;
 
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
@@ -14,10 +13,8 @@ import garbagegroup.cloud.service.serviceImplementation.BinService;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -37,9 +34,6 @@ import java.util.NoSuchElementException;
 
 @ExtendWith(MockitoExtension.class)
 public class BinServiceTest {
-
-    private DTOConverter dtoConverter = new DTOConverter();
-
     @Mock
     private IBinRepository binRepository;
 
@@ -350,7 +344,6 @@ public class BinServiceTest {
         assertFalse(result.isPresent());
     }
 
-
     @Test
     public void testIsValidLatitude() {
         BinService binService = new BinService(); // Assuming no-args constructor available
@@ -649,6 +642,4 @@ public class BinServiceTest {
         // Act and assert
         assertTrue(result);
     }
-
-
 }
