@@ -49,14 +49,17 @@ public class UserServiceTest {
                 "testion"
         );
         User user = new User(
-                "tester_name",
+                "testerion",
                 "Tester Testington",
                 "testword",
                 "Garbage Collector",
                 "testion"
         );
+        List<User> users = new ArrayList<>();
+        users.add(user);
 
         //Mock
+        when(userRepository.findAll()).thenReturn(users);
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(passwordEncoder.encode(any(String.class))).thenReturn("encodedPassword");
 
@@ -77,9 +80,19 @@ public class UserServiceTest {
                 "Harry Tester",
                 "testion"
         );
+        User user = new User(
+                "admin",
+                "Tester Testington",
+                "testword",
+                "Harry Tester",
+                "testion"
+        );
+        List<User> users = new ArrayList<>();
+        users.add(user);
 
         //Mock
         when(passwordEncoder.encode(any(String.class))).thenReturn("encodedPassword");
+        when(userRepository.findAll()).thenReturn(users);
 
         // Act and assert
         assertThrows(IllegalArgumentException.class, () -> userService.create(createUserDto));
