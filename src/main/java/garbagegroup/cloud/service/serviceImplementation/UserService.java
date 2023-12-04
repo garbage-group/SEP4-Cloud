@@ -52,7 +52,7 @@ public class UserService implements IUserService {
             System.out.println("from service"+user.getUsername());
             return user;
         } else {
-            throw new RuntimeException("User with username " + username + " not found");
+            throw new NoSuchElementException("User with username " + username + " not found");
         }
     }
 
