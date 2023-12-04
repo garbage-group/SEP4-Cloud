@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 
 @CrossOrigin
@@ -38,7 +40,6 @@ public class UserController {
 
 
     @GetMapping("/users/{username}")
-    @PreAuthorize("hasRole('garbage collector')")
     public ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("username") String username) {
         try {
             User user = userService.fetchUserByUsername(username);
@@ -60,7 +61,7 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> fetchAllUsers() {
+    public ResponseEntity<List<UserDto>> fetchAllUsers() {
         try {
             return new ResponseEntity<>(userService.fetchAllUsers(), HttpStatus.OK);
         } catch (RuntimeException e) {
