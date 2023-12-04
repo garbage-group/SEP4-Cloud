@@ -15,18 +15,6 @@ public class Client {
     private InetAddress address;
 
     public void startClient() {
-        try {
-            String url = "https://garbage-backend-service-kq2hras2oq-ey.a.run.app"; // Replace with the URL you want to convert
-            address = InetAddress.getByName(new URL(url).getHost());
-
-            System.out.println("URL: " + url);
-            System.out.println("IP Address: " + address.getHostAddress());
-        } catch (MalformedURLException e) {
-            System.out.println("Invalid URL");
-        } catch (UnknownHostException e) {
-            System.out.println("Unable to find IP address for the given URL");
-        }
-
         try{
             Socket socket = new Socket("localhost", 2910);
             System.out.println("Connected to the server");
@@ -83,6 +71,10 @@ public class Client {
                 }
                 else if (result.equals("getCurrentLevel")) {
                     outToServer.write("level:67.0".getBytes());
+                    outToServer.flush();
+                }
+                else if (result.equals("getStatus")) {
+                    outToServer.write("statu:OK".getBytes());
                     outToServer.flush();
                 }
             }
