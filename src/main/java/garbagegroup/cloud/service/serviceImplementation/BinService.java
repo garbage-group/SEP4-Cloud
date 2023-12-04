@@ -9,19 +9,25 @@ import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
     private DTOConverter dtoConverter;
+    private ScheduledExecutorService executorService;
 
 
     @Autowired
@@ -551,6 +557,58 @@ public class BinService implements IBinService {
         );
     }
 
+    /**
+     * Starts a service that requests current level of connected devices
+     * @param intervalSeconds interval in which the data is requested in seconds
+     */
+    public void startPeriodicLevelRequest(int intervalSeconds) {
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.scheduleAtFixedRate(this::requestCurrentLevels, 0, intervalSeconds, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Stops a service that requests current level of connected devices
+     */
+    public void stopPeriodicLevelRequest() {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+    }
+
+    /**
+     * Iterates through a list of connected devices and requests the current fill levels
+     * based on a matching binID and saves them to database.
+     */
+    private void requestCurrentLevels() {
+        try {
+            List<BinDto> bins = findAllBins();
+            List<ServerSocketHandler> devices = tcpServer.getIoTDevices();
+
+            for (ServerSocketHandler device : devices) {
+                System.out.println("Requesting current level from device " + device.getDeviceId());
+
+                // Find the bin that matches the device ID
+                BinDto matchingBin = bins.stream()
+                        .filter(bin -> bin.getDeviceId() == device.getDeviceId())
+                        .findFirst()
+                        .orElse(null);
+
+                if (matchingBin != null) {
+                    long binId = matchingBin.getId(); // Assuming binId is a long type
+                    String response = device.sendMessage("getCurrentLevel");
+                    handleIoTData(matchingBin.getId().intValue(), response);
+                } else {
+                    System.out.println("No matching bin found for device ID " + device.getDeviceId());
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error while trying periodical level retrieval of connected devices.");
+        }
+
+    }
 
 }
 

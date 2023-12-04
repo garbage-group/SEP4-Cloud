@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 import java.util.Scanner;
 
 @Component
@@ -13,6 +14,7 @@ public class Client {
     private OutputStream outToServer;
     private InputStream inFromServer;
     private InetAddress address;
+    private final Random random = new Random();
 
     public void startClient() {
         try{
@@ -70,7 +72,10 @@ public class Client {
                     outToServer.flush();
                 }
                 else if (result.equals("getCurrentLevel")) {
-                    outToServer.write("level:67.0".getBytes());
+                    float value = random.nextFloat() * 100;
+                    // Round to 1 decimal place
+                    value = Math.round(value * 10) / 10f;
+                    outToServer.write(("level:" + value).getBytes());
                     outToServer.flush();
                 }
                 else if (result.equals("getStatus")) {

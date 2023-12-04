@@ -34,4 +34,6 @@ public interface IBinService {
     int getAvailableDevice();
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
     boolean getDeviceStatusByBinId(Long binId);
+    void startPeriodicLevelRequest(int intervalSeconds);
+    void stopPeriodicLevelRequest();
 }
