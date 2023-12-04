@@ -2,6 +2,7 @@ package garbagegroup.cloud.controller;
 
 import garbagegroup.cloud.DTOs.BinDto;
 import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.DTOs.NotificationBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Humidity;
@@ -146,7 +147,31 @@ public class BinController {
         }
     }
 
+    @GetMapping("/notification")
+    public ResponseEntity<List<NotificationBinDto>> getBinsWithThresholdLessThanFillLevel() {
+        try {
+            List<NotificationBinDto> bins = binService.getBinsWithThresholdLessThanFillLevel();
+            return new ResponseEntity<>(bins, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching all bins", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
+    @GetMapping("/{binId}/device_status")
+    public ResponseEntity<String> getDeviceStatusByBinId(@PathVariable Long binId) {
+        try {
+            if (binService.getDeviceStatusByBinId(binId)) {
+                return new ResponseEntity<>("The device is online and running with no issues", HttpStatus.OK);
+            } else return new ResponseEntity<>("The device on bin " + binId + " needs attention! Some of the sensors are not working.", HttpStatus.NOT_FOUND);
+        } catch (NoSuchElementException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching device's status on bin with ID: " + binId, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
 

@@ -1,14 +1,18 @@
 package garbagegroup.cloud.tcpclient;
 
+import org.springframework.stereotype.Component;
+
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
+@Component
 public class Client {
     private OutputStream outToServer;
     private InputStream inFromServer;
+    private InetAddress address;
 
     public void startClient() {
         try{
@@ -67,6 +71,10 @@ public class Client {
                 }
                 else if (result.equals("getCurrentLevel")) {
                     outToServer.write("level:67.0".getBytes());
+                    outToServer.flush();
+                }
+                else if (result.equals("getStatus")) {
+                    outToServer.write("statu:OK".getBytes());
                     outToServer.flush();
                 }
             }
