@@ -62,14 +62,14 @@ public class UserController {
     }
 
         @PatchMapping("/{username}")
-        public ResponseEntity<UpdateUserDto> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
+        public ResponseEntity<String> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
             try {
                 User user = userService.fetchUserByUsername(username);
                 user.setFullname(userDto.getFullname());
                 user.setPassword(userDto.getPassword());
                 user.setRegion(userDto.getRegion());
                 userService.updateUser(userDto);
-                return new ResponseEntity<>(userDto, HttpStatus.OK);
+                return ResponseEntity.ok("User updated successfully");
             } catch (Exception e) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }

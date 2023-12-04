@@ -197,42 +197,45 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUser() {
-        // Given
+    public void testUpdateUser_Success() {
+        // Mock data
         String username = "testUser";
-        UpdateUserDto userDto = new UpdateUserDto();
-        userDto.setFullname("Test User");
-        userDto.setPassword("newPassword");
-        userDto.setRegion("Test Region");
+        UpdateUserDto updateUserDto = new UpdateUserDto();
+        updateUserDto.setFullname("Updated Fullname");
+        updateUserDto.setPassword("newPassword");
+        updateUserDto.setRegion("Updated Region");
 
-        User mockedUser = new User();
-        mockedUser.setUsername(username);
+        User user = new User();
+        user.setUsername(username);
 
-        // Mock the behavior of userService.fetchUserByUsername()
-        when(userService.fetchUserByUsername(username)).thenReturn(mockedUser);
-        // When
-        ResponseEntity<UpdateUserDto> response = userController.updateUser(username, userDto);
+        // Stubbing the userService methods
+        when(userService.fetchUserByUsername(username)).thenReturn(user);
 
-        // Then
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
+
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDto, response.getBody());
+        assertEquals("User updated successfully", response.getBody());
     }
 
     @Test
-    public void testUpdateUserBadRequest() {
-        // Given
+    public void testUpdateUser_Failure() {
+        // Mock data
         String username = "testUser";
-        UpdateUserDto userDto = new UpdateUserDto();
-        // ... (set userDto fields accordingly for a scenario that should lead to a BAD_REQUEST)
+        UpdateUserDto updateUserDto = new UpdateUserDto();
 
-        // Mock the behavior of userService.fetchUserByUsername() to simulate an exception
-        when(userService.fetchUserByUsername(username)).thenThrow(new RuntimeException("User not found"));
+        // Stubbing the userService methods to simulate an exception
+        when(userService.fetchUserByUsername(username)).thenThrow(new RuntimeException());
 
-        // When
-        ResponseEntity<UpdateUserDto> response = userController.updateUser(username, userDto);
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
 
-        // Then
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNull(response.getBody());
     }
 }
