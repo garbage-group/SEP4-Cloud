@@ -4,7 +4,7 @@ import garbagegroup.cloud.model.User;
 
 
 public interface IUserService {
-
     User fetchUserByUsername(String username);
+    void deleteByUsername(String username);
 
 }

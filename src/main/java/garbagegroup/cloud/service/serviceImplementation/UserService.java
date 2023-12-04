@@ -14,6 +14,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 
 @Service
 public class UserService implements IUserService {
@@ -31,10 +33,6 @@ public class UserService implements IUserService {
         this.IUserRepository = IUserRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
-
-//        User user = new User("garbage", "password", "garbage", "garbage collector", "horsens");
-//        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-//        IUserRepository.save(user);
     }
 
     public UserDto convertToUserDto(User user) {
@@ -56,6 +54,15 @@ public class UserService implements IUserService {
         } else {
             throw new RuntimeException("User with username " + username + " not found");
         }
+    }
+
+    @Override
+    public void deleteByUsername(String username) {
+        if (IUserRepository.existsById(username)) {
+            if (IUserRepository.findByUsername(username).getRole().equalsIgnoreCase("municipality worker"))
+                throw new IllegalArgumentException("You may only delete garbage collectors! No other roles.");
+            IUserRepository.deleteById(username);
+        } else throw new NoSuchElementException("User with username '" + username + "' not found");
     }
 
     public AuthenticationResponse authenticate(UserDto request) {
