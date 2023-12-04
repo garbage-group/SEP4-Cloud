@@ -2,12 +2,16 @@ package garbagegroup.cloud.tcpserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ServerSocketHandler {
+public class ServerSocketHandler{
   private int deviceId;
   private Socket socket;
   private InputStream inFromClient;
   private OutputStream outToClient;
+
+
 
   public ServerSocketHandler(Socket socket) {
     this.socket = socket;
@@ -18,6 +22,7 @@ public class ServerSocketHandler {
       e.printStackTrace();
     }
   }
+
 
   public String sendMessage(String message) {
     try {
@@ -48,5 +53,6 @@ public class ServerSocketHandler {
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
+
 
 }
