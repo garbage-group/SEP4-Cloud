@@ -381,10 +381,9 @@ public class BinService implements IBinService, DeviceStatusListener {
     /**
      * Sets the fill threshold data to be sent to the IoT device with the specified payload.
      *
-     * @param payload       The payload indicating the type of data being sent to the IoT device
      * @param fillThreshold The fill threshold value to be communicated to the IoT device
      */
-    private void setIotData(String payload, double fillThreshold) {
+    private void setIotData(double fillThreshold) {
         try {
             // Communicate the fill threshold data to the IoT device
             String responseFromIoT = tcpServer.setFillThreshold(fillThreshold);
@@ -417,7 +416,7 @@ public class BinService implements IBinService, DeviceStatusListener {
                     if (isActiveDevice) {
                             binRepository.save(bin);
                             // Send fill threshold data to the IoT device
-                        setIotData("setFillThreshold("+updatedBinDto.getFillthreshold()+")", updatedBinDto.getFillthreshold());
+                        setIotData(updatedBinDto.getFillthreshold());
                     }
                         else {
                         // If the device is not active, save the bin information and add the update to pendingUpdates queue
