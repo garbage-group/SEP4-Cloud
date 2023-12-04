@@ -3,6 +3,7 @@ package garbagegroup.cloud.jwt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,7 +30,9 @@ public class SecurityConfiguration{
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/users/authenticate").permitAll()
-                        .requestMatchers("/users/{username}").hasAuthority("municipality worker")
+                        .requestMatchers(HttpMethod.POST,"/users").hasAuthority("municipality worker")
+                        .requestMatchers(HttpMethod.DELETE,"/users").hasAuthority("municipality worker")
+                        .requestMatchers(HttpMethod.PATCH,"/users/{username}").hasAuthority("municipality worker")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
