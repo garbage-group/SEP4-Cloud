@@ -1,6 +1,7 @@
 package garbagegroup.cloud.DTOs;
 
 import garbagegroup.cloud.model.Bin;
+import garbagegroup.cloud.model.User;
 
 public class DTOConverter {
 
@@ -19,6 +20,16 @@ public class DTOConverter {
         dto.setHumidity(bin.getHumidity());
         dto.setFillLevels(bin.getFillLevels());
         dto.setTemperatures(bin.getTemperatures());
+        return dto;
+    }
+
+    public UserDto convertToUserDto(User user){
+        UserDto dto = new UserDto();
+        dto.setUsername(user.getUsername());
+        dto.setPassword(user.getPassword());
+        dto.setFullname(user.getFullname());
+        dto.setRole(user.getRole());
+        dto.setRegion(user.getRegion());
         return dto;
     }
 }

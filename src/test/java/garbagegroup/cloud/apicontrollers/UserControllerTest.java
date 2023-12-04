@@ -1,5 +1,6 @@
 package garbagegroup.cloud.apicontrollers;
 
+import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.controller.UserController;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
@@ -12,6 +13,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -26,6 +31,9 @@ public class UserControllerTest {
 
     @InjectMocks
     private UserController userController;
+
+    @InjectMocks
+    private DTOConverter dtoConverter;
 
     @BeforeEach
     public void setUp() {
@@ -50,6 +58,25 @@ public class UserControllerTest {
     }
 
     @Test
+    public void fetchUserByUsername_ReturnsUserDto() {
+        // Given
+        String username = "existinguser";
+        User user = new User("existinguser", "password", "Full Name", "ROLE_USER", "Region");
+
+        // Mock behavior
+        when(userService.fetchUserByUsername(username)).thenReturn(user);
+
+        // When
+        ResponseEntity<UserDto> responseEntity = userController.fetchUserByUsername(username);
+
+        // Then
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(user.getUsername(), responseEntity.getBody().getUsername());
+        // Add assertions for other fields as needed
+        verify(userService, times(1)).fetchUserByUsername(username);
+    }
+
+    @Test
     public void authenticate_ThrowsException_ReturnsNotFound() {
         // Given
         UserDto userDto = new UserDto(); // Create or mock a UserDto object as needed
@@ -65,28 +92,6 @@ public class UserControllerTest {
     }
 
     @Test
-    public void fetchUserByUsername_ReturnsUserDto() {
-        // Given
-        String username = "testuser";
-        User user = new User(); // Mock User object
-        UserDto userDto = new UserDto(); // Create a UserDto object or mock as needed
-
-        // Mock behavior
-        when(userService.fetchUserByUsername(username)).thenReturn(user);
-        // Assume a service method convertToUserDto exists, or mock it accordingly
-        when(userService.convertToUserDto(user)).thenReturn(userDto);
-
-        // When
-        ResponseEntity<UserDto> responseEntity = userController.fetchUserByUsername(username);
-
-        // Then
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(userDto, responseEntity.getBody());
-        verify(userService, times(1)).fetchUserByUsername(username);
-        verify(userService, times(1)).convertToUserDto(user);
-    }
-
-    @Test
     public void fetchUserByUsername_ThrowsException_ReturnsBadRequest() {
         // Given
         String username = "nonexistentuser";
@@ -96,6 +101,18 @@ public class UserControllerTest {
 
         // When
         ResponseEntity<UserDto> responseEntity = userController.fetchUserByUsername(username);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void fetchAllUsers_ThrowsException_ReturnsBadRequest() {
+        // Mock behavior to throw an exception
+        when(userService.fetchAllUsers()).thenThrow(new RuntimeException("Error retrieving users"));
+
+        // When
+        ResponseEntity<List<UserDto>> responseEntity = userController.fetchAllUsers();
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
