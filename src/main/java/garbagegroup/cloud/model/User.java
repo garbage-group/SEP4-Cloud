@@ -3,10 +3,13 @@ package garbagegroup.cloud.model;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -68,7 +71,11 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (User user : List.of(this)) {
+            authorities.add(new SimpleGrantedAuthority(user.getRole()));
+        }
+        return authorities;
     }
 
     public String getPassword() {
@@ -101,5 +108,16 @@ public class User implements UserDetails {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", fullname='" + fullname + '\'' +
+                ", role='" + role + '\'' +
+                ", region='" + region + '\'' +
+                '}';
     }
 }

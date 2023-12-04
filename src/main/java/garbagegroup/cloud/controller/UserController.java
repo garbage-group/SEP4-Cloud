@@ -1,5 +1,6 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.UserDto;
@@ -14,7 +15,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.NoSuchElementException;
 
 import java.util.List;
@@ -70,6 +70,20 @@ public class UserController {
         }
     }
 
+    @PatchMapping("/{username}")
+    public ResponseEntity<String> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
+        try {
+            User user = userService.fetchUserByUsername(username);
+            user.setFullname(userDto.getFullname());
+            user.setPassword(userDto.getPassword());
+            user.setRegion(userDto.getRegion());
+            userService.updateUser(userDto);
+            return ResponseEntity.ok("User updated successfully");
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody CreateUserDto createUserDto) {
         try {
@@ -96,6 +110,4 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }

@@ -8,13 +8,15 @@ import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceImplementation.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 
+import static org.mockito.Mockito.when;
 public class UserServiceTest {
     @Mock
     private IUserRepository userRepository;
@@ -248,5 +251,14 @@ public class UserServiceTest {
         // Act and assert
         assertThrows(DuplicateKeyException.class, () -> userService.create(createUserDto));
     }
-}
 
+    @Test
+    public void testFetchAllUsers_NoUsersFound() {
+        // Given
+        when(userRepository.findAll()).thenReturn(new ArrayList<>());
+
+        // When & Then (Exception handling)
+        assertThrows(RuntimeException.class, () -> userService.fetchAllUsers());
+        // Add assertions or further handling for exception scenarios if needed
+    }
+}
