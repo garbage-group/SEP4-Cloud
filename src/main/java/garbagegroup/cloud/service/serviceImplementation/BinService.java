@@ -7,7 +7,6 @@ import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
-import garbagegroup.cloud.tcpserver.DeviceStatusListener;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -323,6 +322,10 @@ public class BinService implements IBinService {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
             createdBin.setDeviceId(deviceId);
+            if (!tcpServer.setIoTData(deviceId, "calibrateDevice")) {
+                // Try to calibrate the device and if it returns false, something went wrong - but we don't even throw exception because it is not so important
+                System.out.println("The device could not be calibrated");
+            }
         }
         return createdBin;
     }
