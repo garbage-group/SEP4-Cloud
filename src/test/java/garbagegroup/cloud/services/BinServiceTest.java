@@ -428,19 +428,17 @@ public class BinServiceTest {
     @Test
     public void testCreate_WithNoAvailableDevice_CreatesBinWithFakeDevice() {
         // Arrange
-        int binId = 1;
         CreateBinDTO binDTO = new CreateBinDTO(20.34, 50.34, 56, 78);
         when(tcpServer.getIoTDevices()).thenReturn(new ArrayList<>());
         Bin bin = new Bin();
         bin.setId((long) 12);
         when(binRepository.save(any(Bin.class))).thenReturn(bin);
-        when(binRepository.findById((long) binId)).thenReturn(Optional.of(new Bin()));
 
         // Act
         Bin result = binService.create(binDTO);
 
         // Assert
-        assertNotNull(result.getDeviceId());
+        assertTrue(result.getDeviceId() != 0);
         assertTrue(result.getDeviceId() >= 1000 && result.getDeviceId() < 2000); // Assuming fake device ID is in this range
         verify(binRepository).save(any(Bin.class));
     }
