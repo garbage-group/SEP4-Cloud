@@ -173,5 +173,17 @@ public class BinController {
         }
     }
 
+    @PostMapping("/startPeriodicRequest/{intervalSeconds}")
+    public ResponseEntity<String> startPeriodicRequest(@PathVariable int intervalSeconds) {
+        binService.startPeriodicLevelRequest(intervalSeconds);
+        return ResponseEntity.ok("Periodic level request started with interval: " + intervalSeconds + " seconds");
+    }
+
+    @PostMapping("/stopPeriodicRequest")
+    public ResponseEntity<String> stopPeriodicRequest() {
+        binService.stopPeriodicLevelRequest();
+        return ResponseEntity.ok("Periodic level request stopped");
+    }
+
 }
 

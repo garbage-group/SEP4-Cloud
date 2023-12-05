@@ -15,6 +15,9 @@ import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.mockito.InjectMocks;
@@ -27,6 +30,9 @@ import java.util.*;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.management.Notification;
+import javax.swing.text.html.Option;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -725,129 +731,155 @@ public class BinServiceTest {
         verify(binRepository, times(1)).findById(3L);
     }
 
-    /*
     @Test
-    public void testGetBinsWithThresholdLessThanFillLevel() {
-        // Arrange
-        Bin bin1 = new Bin();
-        bin1.setId(1L);
-        bin1.setDeviceId(1234);
-        bin1.setFillThreshold(70.0);
-        Level level1 = new Level(60, LocalDateTime.now());
-        bin1.setFillLevels(Arrays.asList(level1));
+    public void getLastLevelReadingWithTimestamp_NoBinFound_ReturnsEmptyLevel() {
+        //Mock
+        when(binRepository.findById(1L)).thenReturn(Optional.empty());
+
+        //Act
+        Level result = binService.getLastLevelReadingWithTimestamp(1L);
+
+        //Assert
+        assertNull(result.getBin());
+        assertEquals(0, result.getValue());
+    }
+
+    @Test
+    public void getLastLevelReadingWithTimestamp_SuccessfulFlow_ReturnsLatestLevel() {
+        //Arrange
+        Bin bin = new Bin();
+        List<Level> levels = new ArrayList<>();
+        levels.add(new Level(59D, LocalDateTime.now().minusMinutes(90)));
+        levels.add(new Level(80D, LocalDateTime.now().minusMinutes(30)));
+        bin.setFillLevels(levels);
+        bin.setId(1L);
+
+        //Mock
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        //Act
+        Level result = binService.getLastLevelReadingWithTimestamp(1L);
+
+        //Assert
+        assertEquals(80D, result.getValue());
+    }
+
+    @Test
+    public void getBinsWithThresholdLessThanFillLevel_AllBinsHigherThreshold_ReturnsEmptyList() {
+        //Arrange
+        List<Bin> bins = new ArrayList<>();
+        Bin bin = new Bin(40D, 40D, 60D, 70D, LocalDateTime.now().minusMinutes(40), null);
+        List<Level> levels = new ArrayList<>();
+        Level level = new Level(60D, LocalDateTime.now().minusMinutes(40));
+        levels.add(level);
+        bin.setFillLevels(levels);
+        bins.add(bin);
+        bins.add(new Bin(40D, 40D, 12D, 50D, LocalDateTime.now().minusMinutes(40), null));
+
+        //Mock
+        when(binRepository.findAll()).thenReturn(bins);
+
+        //Act
+        List<NotificationBinDto> result = binService.getBinsWithThresholdLessThanFillLevel();
+
+        //Assert
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void getBinsWithThresholdLessThanFillLevel_2BinsLowerThanThreshold_ReturnsListOfSize2() {
+        //Arrange
+        List<Bin> bins = new ArrayList<>();
+        Bin bin = new Bin(40D, 40D, 70D, 70D, LocalDateTime.now().minusMinutes(40), null);
+        bin.setId(1L);
+        List<Level> levels = new ArrayList<>();
+        Level level = new Level(70D, LocalDateTime.now().minusMinutes(40));
+        levels.add(level);
+        bin.setFillLevels(levels);
+        bins.add(bin);
+
+        Bin bin2 = new Bin(40D, 40D, 51D, 50D, LocalDateTime.now().minusMinutes(40), null);
+        bin2.setId(2L);
+        List<Level> levels2 = new ArrayList<>();
+        Level level2 = new Level(51D, LocalDateTime.now().minusMinutes(40));
+        levels2.add(level2);
+        bin2.setFillLevels(levels2);
+        bins.add(bin2);
+
+        Bin bin3 = new Bin(40D, 40D, 45D, 50D, LocalDateTime.now().minusMinutes(40), null);
+        bin3.setId(3L);
+        List<Level> levels3 = new ArrayList<>();
+        Level level3 = new Level(45D, LocalDateTime.now().minusMinutes(40));
+        levels3.add(level3);
+        bin3.setFillLevels(levels3);
+        bins.add(bin3);
+
+
+        //Mock
+        when(binRepository.findAll()).thenReturn(bins);
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+        when(binRepository.findById(2L)).thenReturn(Optional.of(bin2));
+        when(binRepository.findById(3L)).thenReturn(Optional.of(bin3));
+
+        //Act
+        List<NotificationBinDto> result = binService.getBinsWithThresholdLessThanFillLevel();
+
+        //Assert
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    public void verifyBinsFillLevel_hasActiveDevice_ReturnsCurrentLevel() {
+        //Arrange
+        Bin bin = new Bin(40D, 40D, 45D, 50D, LocalDateTime.now().minusMinutes(40), null);
+        bin.setDeviceId(1234);
+        bin.setId(1L);
+        List<Level> levels = new ArrayList<>();
+        Level level = new Level(70D, LocalDateTime.now().minusMinutes(40));
+        levels.add(level);
+        bin.setFillLevels(levels);
 
         Socket mockedSocket = mock(Socket.class);
         List<ServerSocketHandler> IoTDevices = new ArrayList<>();
         ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
         ssh1.setDeviceId(1234);
         IoTDevices.add(ssh1);
+
+        //Mock
         when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
-
-
-        when(binRepository.findAll()).thenReturn(Arrays.asList(bin1));
-        when(binRepository.findById(1L)).thenReturn(Optional.of(bin1));
-        when(binService.getLastLevelReadingWithTimestamp(1L)).thenReturn(level1);
-
-        // Act
-        List<NotificationBinDto> notifications = binService.getBinsWithThresholdLessThanFillLevel();
-
-        // Assert
-        assertEquals(1, notifications.size());
-    }
-
-    @Test
-    public void testProcessBin_ActiveDevice() {
-        // Arrange
-        Bin bin = new Bin();
-        bin.setId(1L);
-        bin.setDeviceId(1234);
-        bin.setFillThreshold(70.0);
-
-        Level level = new Level(80, LocalDateTime.now());
-
-        when(binService.hasActiveDevice(1234)).thenReturn(true);
-        when(binService.getCurrentFillLevelByBinId(1L)).thenReturn(Optional.of(level));
-
-        // Act
-        NotificationBinDto notification = binService.verifyBinsFillLevel(bin);
-
-
-    }
-
-    @Test
-    public void testProcessBin_InactiveDevice() {
-        // Arrange
-        Bin bin = new Bin();
-        bin.setId(2L);
-        bin.setDeviceId(1234);
-        bin.setFillThreshold(60.0);
-
-        Level level = new Level(50, LocalDateTime.now());
-
-        when(binService.hasActiveDevice(1234)).thenReturn(false);
-        when(binService.getLastLevelReadingWithTimestamp(2L)).thenReturn(level);
-
-        // Invoke the method
-        NotificationBinDto notification = binService.verifyBinsFillLevel(bin);
-
-        // Assertions
-        // Add assertions for the notification based on the expected behavior
-    }
-
-    @Test
-    public void testGetLastLevelReadingWithTimestamp_LevelFound() {
-        // Arrange
-        Bin bin = mock(Bin.class);
-        bin.setId(1L);
-        Level level = new Level(50, LocalDateTime.now());
-
-        List<Level> levels = new ArrayList<>();
-        levels.add(level);
-
         when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
-        when(bin.getFillLevels()).thenReturn(levels);
 
-        // Act
-        Level lastLevel = binService.getLastLevelReadingWithTimestamp(1L);
+        //Act
+        NotificationBinDto result = binService.verifyBinsFillLevel(bin);
 
-        // Assert
-        assertNotNull(lastLevel);
-        assertEquals(level, lastLevel);
-        verify(binRepository, times(1)).findById(1L);
-        verify(bin, times(1)).getFillLevels();
+        assertEquals(70D, result.getLevelValue());
     }
 
     @Test
-    public void testGetLastLevelReadingWithTimestamp_LevelNotFound() {
-        // Arrange
-        when(binRepository.findById(2L)).thenReturn(Optional.empty());
+    public void verifyBinsLevel_hasActiveDeviceButLowLevel_ReturnsNull() {
+        //Arrange
+        Bin bin = new Bin(40D, 40D, 45D, 50D, LocalDateTime.now().minusMinutes(40), null);
+        bin.setDeviceId(1234);
+        bin.setId(1L);
+        List<Level> levels = new ArrayList<>();
+        Level level = new Level(45D, LocalDateTime.now().minusMinutes(40));
+        levels.add(level);
+        bin.setFillLevels(levels);
 
-        // Act
-        Level lastLevel = binService.getLastLevelReadingWithTimestamp(2L);
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1234);
+        IoTDevices.add(ssh1);
 
-        // Assert
-        assertNotNull(lastLevel);
-        assertEquals(0, lastLevel.getValue()); // Assuming 0 value for an empty level
-        verify(binRepository, times(1)).findById(2L);
+        //Mock
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        //Act
+        NotificationBinDto result = binService.verifyBinsFillLevel(bin);
+
+        //Assert
+        assertNull(result);
     }
-
-    @Test
-    public void testGetLastLevelReadingWithTimestamp_EmptyLevelsList() {
-        // Arrange
-        Bin bin = new Bin();
-        bin.setId(3L);
-        bin.setFillLevels(new ArrayList<>());
-
-        when(binRepository.findById(3L)).thenReturn(Optional.of(bin));
-
-        // Act
-        Level lastLevel = binService.getLastLevelReadingWithTimestamp(3L);
-
-        // Assert
-        assertNotNull(lastLevel);
-        assertEquals(0, lastLevel.getValue()); // Assuming 0 value for an empty level
-        verify(binRepository, times(1)).findById(3L);
-    }
-
-     */
 }
