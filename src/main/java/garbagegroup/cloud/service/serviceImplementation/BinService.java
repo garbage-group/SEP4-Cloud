@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
-    private DTOConverter dtoConverter;
     private ScheduledExecutorService executorService;
 
 
@@ -269,9 +268,10 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public void deleteBinById(long binId) {
+    public boolean deleteBinById(long binId) {
         if (binRepository.existsById(binId)) {
             binRepository.deleteById(binId);
+            return true;
         } else {
             throw new NoSuchElementException("Bin with id " + binId + " not found");
         }
@@ -294,7 +294,7 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = dtoConverter.convertToBinDto(bin);
+            BinDto binDto = DTOConverter.convertToBinDto(bin);
             return Optional.of(binDto);
         } else {
             return Optional.empty();
