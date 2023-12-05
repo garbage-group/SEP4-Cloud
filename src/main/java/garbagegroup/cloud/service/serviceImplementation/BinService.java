@@ -467,11 +467,9 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             List<Level> allLevels = binOptional.get().getFillLevels();
-            if (allLevels != null) {
+            if (!allLevels.isEmpty()) {
                 allLevels.sort(Comparator.comparing(Level::getDateTime).reversed());
-                if (!allLevels.isEmpty()) {
-                    return allLevels.get(0); // Return the level object with the latest timestamp
-                }
+                return allLevels.get(0); // Return the level object with the latest timestamp
             }
         }
         return new Level(); // Return an empty Level object if not found
