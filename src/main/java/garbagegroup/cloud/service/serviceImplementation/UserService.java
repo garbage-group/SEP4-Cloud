@@ -1,6 +1,6 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.UserDto;
@@ -15,20 +15,17 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
 
 
 @Service
 public class UserService implements IUserService {
-
     private final JwtService jwtService;
     private IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-
-
 
     @Autowired
     public UserService(JwtService jwtService, IUserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
@@ -36,23 +33,74 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
-
-//        User user = new User("admin", "password", "admin", "municipality worker", "horsens");
-//        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-//        IUserRepository.save(user);
     }
 
 
+    /**
+     * Fetches user details from the repository based on the provided username.
+     *
+     * @param username The username of the user to be fetched.
+     * @return The User object corresponding to the provided username.
+     * @throws RuntimeException If the user with the given username is not found in the repository.
+     */
     @Override
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
             return user;
         } else {
-            throw new RuntimeException("User with username " + username + " not found");
+            throw new NoSuchElementException("User with username " + username + " not found");
         }
     }
 
+    /**
+     * Deletes Garbage collector in the DB by their username
+     * Only allows to delete users whose role is "garbage collector"
+     * @param username
+     */
+    @Override
+    public void deleteByUsername(String username) {
+        if (userRepository.existsById(username)) {
+            if (userRepository.findByUsername(username).getRole().equalsIgnoreCase("municipality worker"))
+                throw new IllegalArgumentException("You may only delete garbage collectors! No other roles.");
+            userRepository.deleteById(username);
+        } else throw new NoSuchElementException("User with username '" + username + "' not found");
+    }
+
+    /**
+     * Updates user information based on the provided UpdateUserDto.
+     * If the user is found by username, the information (password, fullname, region) will be updated and saved to the database.
+     *
+     * @param user The UpdateUserDto containing the updated user information.
+     * @return
+     * @throws RuntimeException If the user with the given username is not found or if an unexpected exception occurs during the update process.
+     */
+    @Override
+    public boolean updateUser(UpdateUserDto user) {
+        try {
+            User userToUpdate = userRepository.findByUsername(user.getUsername());
+            if (userToUpdate != null) {
+                userToUpdate.setPassword(this.passwordEncoder.encode(user.getPassword()));
+                userToUpdate.setFullname(user.getFullname());
+                userToUpdate.setRegion(user.getRegion());
+
+                // Save the updated user to the database
+                userRepository.save(userToUpdate);
+                return true;
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating the User with username: " + user.getUsername() + e.getMessage());
+            return false;
+        }
+        return false;
+    }
+
+    /**
+        * Fetches all users from the database.
+        *
+        * @return A list of UserDto objects.
+        * @throws RuntimeException If no users are found.
+        */
     @Override
     public List<UserDto> fetchAllUsers() {
         List<User> users = userRepository.findAll();
@@ -66,6 +114,14 @@ public class UserService implements IUserService {
         return userDtos;
     }
 
+
+    /**
+     * Authenticates a user based on the provided UserDto credentials.
+     *
+     * @param request The UserDto containing the username and password for authentication.
+     * @return An AuthenticationResponse containing the generated JWT token upon successful authentication.
+     * @throws RuntimeException      If the user is not found after authentication.
+     */
     public AuthenticationResponse authenticate(UserDto request) {
 
         authenticationManager.authenticate(

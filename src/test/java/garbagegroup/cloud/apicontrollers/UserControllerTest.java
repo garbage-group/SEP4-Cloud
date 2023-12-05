@@ -2,6 +2,7 @@ package garbagegroup.cloud.apicontrollers;
 
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.controller.UserController;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class UserControllerTest {
@@ -39,6 +39,9 @@ public class UserControllerTest {
 
     @InjectMocks
     private DTOConverter dtoConverter;
+
+    @InjectMocks
+    private UpdateUserDto updateUserDto;
 
     @BeforeEach
     public void setUp() {
@@ -191,5 +194,48 @@ public class UserControllerTest {
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void testUpdateUser_Success() {
+        // Mock data
+        String username = "testUser";
+        UpdateUserDto updateUserDto = new UpdateUserDto();
+        updateUserDto.setFullname("Updated Fullname");
+        updateUserDto.setPassword("newPassword");
+        updateUserDto.setRegion("Updated Region");
+
+        User user = new User();
+        user.setUsername(username);
+
+        // Stubbing the userService methods
+        when(userService.fetchUserByUsername(username)).thenReturn(user);
+
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
+
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User updated successfully", response.getBody());
+    }
+
+    @Test
+    public void testUpdateUser_Failure() {
+        // Mock data
+        String username = "testUser";
+        UpdateUserDto updateUserDto = new UpdateUserDto();
+
+        // Stubbing the userService methods to simulate an exception
+        when(userService.fetchUserByUsername(username)).thenThrow(new RuntimeException());
+
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
+
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }

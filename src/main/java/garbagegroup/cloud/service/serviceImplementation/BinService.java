@@ -7,22 +7,22 @@ import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
-import garbagegroup.cloud.tcpserver.DeviceStatusListener;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
-public class BinService implements IBinService, DeviceStatusListener {
+public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
     private DTOConverter dtoConverter;
-    private final Queue<UpdateBinDto> pendingUpdates = new LinkedList<>();
 
 
     @Autowired
@@ -32,8 +32,6 @@ public class BinService implements IBinService, DeviceStatusListener {
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
-        tcpServer.addDeviceStatusListener(this);
-
     }
 
     public BinService() {
@@ -317,12 +315,14 @@ public class BinService implements IBinService, DeviceStatusListener {
             int randomDeviceId = random.nextInt(2000 - 1001) + 1000;
             newBin.setDeviceId(randomDeviceId);
             createdBin = binRepository.save(newBin);
-            loadFakeIoTDeviceData(newBin.getId().intValue(), "getHumidity");
-            loadFakeIoTDeviceData(newBin.getId().intValue(), "getTemperature");
-            loadFakeIoTDeviceData(newBin.getId().intValue(), "getCurrentLevel");
+            createdBin.setDeviceId(randomDeviceId);
+            loadFakeIoTDeviceData(createdBin.getId().intValue(), "getHumidity");
+            loadFakeIoTDeviceData(createdBin.getId().intValue(), "getTemperature");
+            loadFakeIoTDeviceData(createdBin.getId().intValue(), "getCurrentLevel");
         } else {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
+            createdBin.setDeviceId(deviceId);
         }
         return createdBin;
     }
@@ -373,24 +373,9 @@ public class BinService implements IBinService, DeviceStatusListener {
         if (IoTDevices == null) return false;
         if (IoTDevices.isEmpty()) return false;
         for (ServerSocketHandler IoTDevice : IoTDevices) {
-            return IoTDevice.getDeviceId() == deviceId;
+            if (IoTDevice.getDeviceId() == deviceId) return true;
         }
         return false;
-    }
-
-    /**
-     * Sets the fill threshold data to be sent to the IoT device with the specified payload.
-     *
-     * @param fillThreshold The fill threshold value to be communicated to the IoT device
-     */
-    private void setIotData(double fillThreshold) {
-        try {
-            // Communicate the fill threshold data to the IoT device
-            String responseFromIoT = tcpServer.setFillThreshold(fillThreshold);
-            System.out.println("fill threshold received from IoT device: " + responseFromIoT);
-        } catch (Exception e) {
-            System.out.println("Error communicating with IoT device: " + e.getMessage());
-        }
     }
 
     /**
@@ -399,85 +384,35 @@ public class BinService implements IBinService, DeviceStatusListener {
      * and sends the fill threshold data to the IoT device.
      *
      * @param updatedBinDto The DTO containing updated information for the Bin
+     * @return
      * @throws IllegalArgumentException When encountering issues during the bin update process or device unavailability
      */
-        public void updateBin(UpdateBinDto updatedBinDto) {
-            Optional<Bin> binOptional = binRepository.findById(updatedBinDto.getId());
-            if (binOptional.isPresent()) {
-                Bin bin = binOptional.get();
-                try {
-                    updateBinFields(bin, updatedBinDto);
-                    bin.setId(updatedBinDto.getId());
-                    int deviceId = bin.getDeviceId();
-
-                    // Check if the device is active
-                    boolean isActiveDevice = hasActiveDevice(deviceId);
-
-                    if (isActiveDevice) {
-                            binRepository.save(bin);
-                            // Send fill threshold data to the IoT device
-                        setIotData(updatedBinDto.getFillthreshold());
-                    }
-                        else {
-                        // If the device is not active, save the bin information and add the update to pendingUpdates queue
-                        binRepository.save(bin);
-                        pendingUpdates.offer(updatedBinDto);
-                    }
-                } catch (Exception e) {
-                    throw new IllegalArgumentException(e.getMessage());
-                }
-            }
-        }
-
-        /**
-         * Called when a device is connected to the TCP server.
-         * Checks if there are any pending updates for the device and sends them to the device.
-         * if there are more than one update, only the last one is sent.
-         *
-         * @param deviceId The ID of the device that is now online
-         */
-    @Override
-    public void onDeviceConnected(int deviceId) {
-        System.out.println("Device " + deviceId + " is now online!");
-        sendPendingUpdates(deviceId);
-    }
-
-    private void sendPendingUpdates(int deviceId) {
-        // Check if there are pending updates for the device
-        UpdateBinDto lastUpdatedThreshold = null;
-        boolean isActiveDevice = hasActiveDevice(deviceId);
-
-        while (!pendingUpdates.isEmpty()) {
-            UpdateBinDto pendingUpdate = pendingUpdates.poll(); // Retrieve and remove the pending update
-
-            if (pendingUpdate != null && pendingUpdate.getFillthreshold() != null) {
-                lastUpdatedThreshold = pendingUpdate; // Set as the last updated threshold
-            }
-        }
-
-        // Send the last updated threshold to the IoT device, if available and the device is active
-        if (isActiveDevice && lastUpdatedThreshold != null) {
+    public boolean updateBin(UpdateBinDto updatedBinDto) {
+        Optional<Bin> binOptional = binRepository.findById(updatedBinDto.getId());
+        if (binOptional.isPresent()) {
+            Bin bin = binOptional.get();
             try {
-                updateBin(lastUpdatedThreshold); // Send the last updated threshold to the IoT device
+                updateBinFields(bin, updatedBinDto);
+                bin.setId(updatedBinDto.getId());
+                binRepository.save(bin);
+                return true;
             } catch (Exception e) {
-                System.err.println("Error sending last updated threshold: " + e.getMessage());
-
-                // If sending fails, add the pending update back to the queue for a retry later
-                pendingUpdates.offer(lastUpdatedThreshold);
+                System.err.println("Error while updating bin with id " + bin.getId() + e.getMessage());
+                return false;
             }
         }
+        throw new NoSuchElementException();
+        //TODO: catch this exception
     }
-
-
 
     /**
      * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.
      * Validates and sets the longitude, latitude, and fill threshold values for the Bin.
      *
-     * @param bin            The Bin object to be updated
-     * @param updatedBinDto  The DTO containing updated values for the Bin
+     * @param bin           The Bin object to be updated
+     * @param updatedBinDto The DTO containing updated values for the Bin
      * @throws IllegalArgumentException if the provided longitude, latitude, or fill threshold is invalid
-     *         or if the fill threshold is lower than the last recorded level reading
+     *                                  or if the fill threshold is lower than the last recorded level reading
      */
     public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
         if (isValidLongitude(updatedBinDto.getLongitude())) {
@@ -500,17 +435,17 @@ public class BinService implements IBinService, DeviceStatusListener {
     }
 
 
-        public boolean isValidLongitude(Double longitude) {
-            return longitude >= -180 && longitude <= 180;
-        }
+    public boolean isValidLongitude(Double longitude) {
+        return longitude >= -180 && longitude <= 180;
+    }
 
-        public boolean isValidLatitude(Double latitude) {
-            return latitude >= -90 && latitude <= 90;
-        }
+    public boolean isValidLatitude(Double latitude) {
+        return latitude >= -90 && latitude <= 90;
+    }
 
-        public boolean isValidThreshold(Double threshold) {
-            return threshold >= 0 && threshold <= 100;
-        }
+    public boolean isValidThreshold(Double threshold) {
+        return threshold >= 0 && threshold <= 100;
+    }
 
     /**
      * Retrieves the last recorded level reading for the specified Bin ID.
@@ -519,7 +454,7 @@ public class BinService implements IBinService, DeviceStatusListener {
      * @param binId The ID of the Bin for which the last level reading is required
      * @return The value of the last recorded level reading or 0 if no readings are available
      */
-    private Level getLastLevelReadingWithTimestamp(Long binId) {
+    public Level getLastLevelReadingWithTimestamp(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             List<Level> allLevels = binOptional.get().getFillLevels();
@@ -535,8 +470,7 @@ public class BinService implements IBinService, DeviceStatusListener {
 
 
     /**
-     * Retrieves a list of bins where the current fill level exceeds the set threshold,
-     * generating notification data for each such bin.
+     * Retrieves a list of bins where the current fill level exceeds the set threshold
      *
      * @return List of NotificationBinDto objects representing bins with fill levels
      * surpassing their threshold.
@@ -544,33 +478,50 @@ public class BinService implements IBinService, DeviceStatusListener {
     @Override
     public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
         List<Bin> bins = binRepository.findAll();
-        // Initialize an empty list to store notifications
-        List<NotificationBinDto> notifications = new ArrayList<>();
 
-        for (Bin bin : bins) {
-            boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
-
-            if (isActiveDevice) {
-                // If the device is active, get the current fill level directly from the device
-                Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
-                if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
-                    notifications.add(convertToDTO(bin, currentLevelFromDevice));
-                }
-            } else {
-                // If the device is inactive, retrieve the latest level reading from the database
-                Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
-                double currentFillLevel = lastLevelWithTimestamp.getValue();
-                LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
-
-                if (currentFillLevel > bin.getFillThreshold()) {
-                    // Create a new Level object using the retrieved values and add it to notifications
-                    notifications.add(convertToDTO(bin, new Level(currentFillLevel, timestamp)));
-                }
-            }
-        }
-        return notifications;
+        return bins.stream()
+                .map(this::verifyBinsFillLevel)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Helped method to getBinsWithThresholdLessThanFillLevel
+     * If the bin has an active device, it requests fill level data from it and if the data is over the threshold of the bin, it returns the Level
+     * If the bin has inactive device, it fetches the last data from DB, and if it is above the threshold, it returns the Level
+     * Else returns null, so it is not saved as an alarming value in the stream in getBinsWithThresholdLessThanFillLevel
+     **
+     * @param bin
+     * @return NotificationBinDto
+     */
+
+    public NotificationBinDto verifyBinsFillLevel(Bin bin) {
+        boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
+
+        if (isActiveDevice) {
+            Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
+            if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
+                return convertToDTO(bin, currentLevelFromDevice);
+            }
+        } else {
+            Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
+            double currentFillLevel = lastLevelWithTimestamp.getValue();
+
+            if (currentFillLevel > bin.getFillThreshold()) {
+                LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
+                return convertToDTO(bin, new Level(currentFillLevel, timestamp));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets Status directly from the IoT device
+     * There is no communication with the DB here, because the status has to come directly from the IoT
+     * If there is no connection to the IoT, it just returns it as offline
+     * @param binId
+     * @return true (active)/ false (not-active)
+     */
     @Override
     public boolean getDeviceStatusByBinId(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
@@ -582,11 +533,10 @@ public class BinService implements IBinService, DeviceStatusListener {
             if (response.equals("statu:OK")) return true;
             else if (response.equals("statu:NOT OK")) return false;
             else throw new NoSuchElementException("The device on bin " + binId + " is offline");
-        }
-        else throw new NoSuchElementException("Bin with id " + binId + " not found");
+        } else throw new NoSuchElementException("Bin with id " + binId + " not found");
     }
 
-    private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
+    public NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(
                 bin.getFillThreshold(),
                 bin.getId(),
@@ -594,8 +544,6 @@ public class BinService implements IBinService, DeviceStatusListener {
                 latestLevel.getDateTime()
         );
     }
-
-
 }
 
 

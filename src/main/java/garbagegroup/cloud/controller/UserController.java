@@ -1,23 +1,21 @@
 package garbagegroup.cloud.controller;
 
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
-
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.service.serviceImplementation.UserService;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.NoSuchElementException;
 
 import java.util.List;
 
@@ -56,6 +54,36 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/{username}")
+    public ResponseEntity<String> deleteUserByUsername(@PathVariable String username) {
+        try {
+            userService.deleteByUsername(username);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            logger.error("Error while deleting: User with username '" + username + "' not found.");
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            logger.error("Error occurred while deleting bin with ID: " + username, e);
+            return new ResponseEntity<>("Error occurred while deleting user with username: " + username, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/{username}")
+    public ResponseEntity<String> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
+        try {
+            User user = userService.fetchUserByUsername(username);
+            user.setFullname(userDto.getFullname());
+            user.setPassword(userDto.getPassword());
+            user.setRegion(userDto.getRegion());
+            userService.updateUser(userDto);
+            return ResponseEntity.ok("User updated successfully");
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody CreateUserDto createUserDto) {
         try {
@@ -72,7 +100,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     @GetMapping
     public ResponseEntity<List<UserDto>> fetchAllUsers() {
         try {
@@ -82,6 +110,4 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }
