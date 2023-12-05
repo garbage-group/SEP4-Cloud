@@ -15,6 +15,6 @@ public interface IUserService {
 
     List<UserDto> fetchAllUsers();
 
-    void updateUser(UpdateUserDto user);
+    boolean updateUser(UpdateUserDto user);
 
 }

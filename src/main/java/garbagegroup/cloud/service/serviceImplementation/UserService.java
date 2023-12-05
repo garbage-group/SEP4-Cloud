@@ -65,10 +65,11 @@ public class UserService implements IUserService {
      * If the user is found by username, the information (password, fullname, region) will be updated and saved to the database.
      *
      * @param user The UpdateUserDto containing the updated user information.
+     * @return
      * @throws RuntimeException If the user with the given username is not found or if an unexpected exception occurs during the update process.
      */
     @Override
-    public void updateUser(UpdateUserDto user) {
+    public boolean updateUser(UpdateUserDto user) {
         try {
             User userToUpdate = userRepository.findByUsername(user.getUsername());
             if (userToUpdate != null) {
@@ -78,10 +79,13 @@ public class UserService implements IUserService {
 
                 // Save the updated user to the database
                 userRepository.save(userToUpdate);
+                return true;
         }
         } catch (Exception e) {
-            throw new RuntimeException("User with username " + user.getUsername() + " not found");
+            System.err.println("Error updating the User with username: " + user.getUsername() + e.getMessage());
+            return false;
         }
+        return false;
     }
 
     /**
