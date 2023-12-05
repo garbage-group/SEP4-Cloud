@@ -17,12 +17,26 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filter class responsible for JWT-based authentication.
+ * This filter intercepts incoming requests and verifies JWT tokens for authenticated routes.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+    /**
+     * Performs the authentication and authorization logic using JWT tokens.
+     *
+     * @param request  The incoming HttpServletRequest.
+     * @param response The HttpServletResponse for the request.
+     * @param chain    The FilterChain for filter execution.
+     * @throws ServletException If a servlet exception occurs.
+     * @throws IOException      If an I/O exception occurs.
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain)
             throws ServletException, IOException {
@@ -30,14 +44,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
-
+        // Check if Authorization header is present and contains a Bearer token
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
 
             return;
         }
+        // Extract the JWT token and username
         jwt = authorizationHeader.substring(7);
         username = jwtService.extractUsername(jwt);
+
+        // Validate the token and set authentication in SecurityContextHolder if valid
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             if(jwtService.isTokenValid(jwt, userDetails)) {
@@ -52,6 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+        // Proceed with the filter chain
         chain.doFilter(request, response);
     }
 }

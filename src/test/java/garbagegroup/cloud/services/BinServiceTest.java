@@ -1,7 +1,8 @@
 package garbagegroup.cloud.services;
 
 import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.CreateBinDTO;
+import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -9,6 +10,7 @@ import garbagegroup.cloud.model.Temperature;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.service.serviceImplementation.BinService;
+import garbagegroup.cloud.tcpserver.ServerSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +34,6 @@ import java.util.NoSuchElementException;
 
 @ExtendWith(MockitoExtension.class)
 public class BinServiceTest {
-
-    private DTOConverter dtoConverter = new DTOConverter();
-
     @Mock
     private IBinRepository binRepository;
 
@@ -255,6 +255,42 @@ public class BinServiceTest {
     }
 
     @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLongitude() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 1000D, 40D, 40D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
+    }
+
+    @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLatitude() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 1000D, 40D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
+    }
+
+    @Test
+    public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidFillThreshold() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 40D, 180D);
+        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
+
+        //Act and assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.updateBinFields(bin, updateBinDto);
+        });
+    }
+
+    @Test
     public void testDeleteBinById_WhenBinExists() {
         long binId = 1L;
         when(binRepository.existsById(binId)).thenReturn(true);
@@ -273,6 +309,7 @@ public class BinServiceTest {
             binService.deleteBinById(binId);
         });
     }
+
     @Test
     public void testFindAllBins() {
         List<Bin> bins = Arrays.asList(new Bin(), new Bin());
@@ -307,8 +344,6 @@ public class BinServiceTest {
         assertFalse(result.isPresent());
     }
 
-
-
     @Test
     public void testIsValidLatitude() {
         BinService binService = new BinService(); // Assuming no-args constructor available
@@ -331,5 +366,280 @@ public class BinServiceTest {
 
         assertFalse(binService.isValidThreshold(-10.0)); // Test invalid threshold (-10.0)
         assertFalse(binService.isValidThreshold(110.0)); // Test invalid threshold (110.0)
+    }
+
+    @Test
+    public void testHandleIoTData_HumidityDataReceived_SavesHumidity() {
+        // Arrange
+        int binId = 1;
+        String data = "humid:45.0";
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(new Bin()));
+
+        // Act
+        binService.handleIoTData(binId, data);
+
+        // Assert
+        verify(binRepository).save(any(Bin.class));
+    }
+
+    @Test
+    public void testHandleIoTData_FillLevelDataReceived_SavesFillLevel() {
+        // Arrange
+        int binId = 1;
+        String data = "level:45.0";
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(new Bin()));
+
+        // Act
+        binService.handleIoTData(binId, data);
+
+        // Assert
+        verify(binRepository).save(any(Bin.class));
+    }
+
+    @Test
+    public void testHandleIoTData_TemperatureDataReceived_SavesTemperature() {
+        // Arrange
+        int binId = 1;
+        String data = "tempe:33.0";
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(new Bin()));
+
+        // Act
+        binService.handleIoTData(binId, data);
+
+        // Assert
+        verify(binRepository).save(any(Bin.class));
+    }
+
+    @Test
+    public void testGetAvailableDevice_NoAvailableDevice_ReturnsZero() {
+        // Arrange
+        when(tcpServer.getIoTDevices()).thenReturn(new ArrayList<>());
+
+        // Act
+        int result = binService.getAvailableDevice();
+
+        // Assert
+        assertEquals(0, result);
+    }
+
+    @Test
+    public void testCreate_WithNoAvailableDevice_CreatesBinWithFakeDevice() {
+        // Arrange
+        int binId = 1;
+        CreateBinDTO binDTO = new CreateBinDTO(20.34, 50.34, 56, 78);
+        when(tcpServer.getIoTDevices()).thenReturn(new ArrayList<>());
+        Bin bin = new Bin();
+        bin.setId((long) 12);
+        when(binRepository.save(any(Bin.class))).thenReturn(bin);
+        when(binRepository.findById((long) binId)).thenReturn(Optional.of(new Bin()));
+
+        // Act
+        Bin result = binService.create(binDTO);
+
+        // Assert
+        assertNotNull(result.getDeviceId());
+        assertTrue(result.getDeviceId() >= 1000 && result.getDeviceId() < 2000); // Assuming fake device ID is in this range
+        verify(binRepository).save(any(Bin.class));
+    }
+
+    @Test
+    void testCreateBin_WithDeviceIdNotZero() {
+        // Arrange
+        CreateBinDTO binDTO = new CreateBinDTO(20.34, 50.34, 56, 78);
+        Socket mockedSocket = mock(Socket.class);
+
+        when(binRepository.save(any(Bin.class))).thenReturn(new Bin());
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(123);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        Bin createdBin = binService.create(binDTO);
+
+        // Assert
+        assertNotNull(createdBin);
+        assertEquals(123, createdBin.getDeviceId()); // Ensure deviceId is set correctly
+        verify(binRepository, times(1)).save(any(Bin.class)); // Verify that save method is called once
+    }
+
+    @Test
+    public void testSaveHumidityByBinId_BinNotFound_ReturnsFalse() {
+        // Arrange
+        int binId = 1;
+        double humidity = 50.0;
+        LocalDateTime dateTime = LocalDateTime.now();
+        when(binRepository.findById((long) binId)).thenReturn(Optional.empty());
+
+        // Act
+        boolean result = binService.saveHumidityByBinId(binId, humidity, dateTime);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void testGetIoTData_WithActiveDevice() {
+        // Arrange
+        int binId = 1;
+        int deviceId = 123;
+        String payload = "somePayload";
+        String expectedResponse = "Real IoT data";
+        Socket mockedSocket = mock(Socket.class);
+
+
+        when(tcpServer.getDataById(deviceId, payload)).thenReturn(expectedResponse);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        String response = binService.getIoTData(binId, deviceId, payload);
+
+        // Assert
+        assertEquals(expectedResponse, response);
+        verify(tcpServer, times(1)).getDataById(deviceId, payload);
+    }
+
+    @Test
+    void testGetAvailableDevice_ReturnsOneAvailableDevice_MoreDevicesActive() {
+        // Arrange
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1);
+        IoTDevices.add(ssh1);
+        ServerSocketHandler ssh2 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(2);
+        IoTDevices.add(ssh2);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        int response = binService.getAvailableDevice();
+
+        // Assert
+        assertEquals(2, response);  // Make sure the available device has the ID of the last device
+        verify(tcpServer, times(1)).getIoTDevices();
+    }
+
+    @Test
+    void testGetAvailableDevice_Returns0_NoAvailableDevices() {
+        // Arrange
+        Bin bin1 = new Bin();
+        bin1.setDeviceId(1);
+        Bin bin2 = new Bin();
+        bin2.setDeviceId(2);
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1);
+        IoTDevices.add(ssh1);
+        ServerSocketHandler ssh2 = new ServerSocketHandler(mockedSocket);
+        ssh2.setDeviceId(2);
+        IoTDevices.add(ssh2);
+
+        List<Bin> bins = Arrays.asList(bin1, bin2);
+        when(binRepository.findAll()).thenReturn(bins);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        int response = binService.getAvailableDevice();
+
+        // Assert
+        assertEquals(0, response);
+        verify(tcpServer, times(1)).getIoTDevices();
+    }
+
+    @Test
+    void testGetAvilableDevice_ReturnsOneDevice() {
+        // Arrange
+        Bin bin1 = new Bin();
+        bin1.setDeviceId(1);
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1);
+        IoTDevices.add(ssh1);
+        ServerSocketHandler ssh2 = new ServerSocketHandler(mockedSocket);
+        ssh2.setDeviceId(2);
+        IoTDevices.add(ssh2);
+
+        List<Bin> bins = Arrays.asList(bin1);
+        when(binRepository.findAll()).thenReturn(bins);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        int response = binService.getAvailableDevice();
+
+        // Assert
+        assertEquals(2, response);
+        verify(tcpServer, times(1)).getIoTDevices();
+    }
+
+    @Test
+    void testHasActiveDevice_ReturnsFalse() {
+        // Arrange
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1);
+        IoTDevices.add(ssh1);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        // Act
+        boolean response = binService.hasActiveDevice(2);
+
+        // Assert
+        assertFalse(response);
+        verify(tcpServer, times(1)).getIoTDevices();
+    }
+
+    @Test
+    public void updateBin_WithNonExistingBinToUpdate_ThrowsNoSuchElementException() {
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
+
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.empty());
+
+        // Act and assert
+        assertThrows(NoSuchElementException.class, () -> binService.updateBin(updateBinDto));
+    }
+
+    @Test
+    public void updateBin_DatabaseError_ReturnsFalse() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
+        Bin bin = new Bin(40D, 20D, null, 80D, null, null);
+
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.of(bin));
+        when(binRepository.save(any(Bin.class))).thenThrow(IllegalArgumentException.class);
+
+        //Act
+        boolean result = binService.updateBin(updateBinDto);
+
+        // Act and assert
+        assertFalse(result);
+    }
+
+    @Test
+    public void updateBin_SuccessfulUpdate_ReturnsTrue() {
+        //Arrange
+        UpdateBinDto updateBinDto = new UpdateBinDto(15L, 40D, 20D, 80D);
+        Bin bin = new Bin(40D, 20D, null, 80D, null, null);
+
+        //Mock
+        when(binRepository.findById(15L)).thenReturn(Optional.of(bin));
+
+        //Act
+        boolean result = binService.updateBin(updateBinDto);
+
+        // Act and assert
+        assertTrue(result);
     }
 }
