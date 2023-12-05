@@ -13,8 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BinControllerTest {
@@ -36,7 +35,7 @@ public class BinControllerTest {
         updateBinDto.setLongitude(10.0); // Set your values for the UpdateBinDto object
 
         // Mock behavior of the binService.updateBin method
-        doNothing().when(binService).updateBin(updateBinDto);
+        when(binService.updateBin(updateBinDto)).thenReturn(true);
 
         ResponseEntity<String> response = binController.updateBin(1L, updateBinDto);
 
