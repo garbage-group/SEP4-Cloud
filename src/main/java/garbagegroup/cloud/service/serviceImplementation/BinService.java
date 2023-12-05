@@ -581,7 +581,7 @@ public class BinService implements IBinService {
      * Iterates through a list of connected devices and requests the current fill levels
      * based on a matching binID and saves them to database.
      */
-    private void requestCurrentLevels() {
+    public void requestCurrentLevels() {
         try {
             List<BinDto> bins = findAllBins();
             List<ServerSocketHandler> devices = tcpServer.getIoTDevices();
@@ -596,7 +596,6 @@ public class BinService implements IBinService {
                         .orElse(null);
 
                 if (matchingBin != null) {
-                    long binId = matchingBin.getId(); // Assuming binId is a long type
                     String response = device.sendMessage("getCurrentLevel");
                     handleIoTData(matchingBin.getId().intValue(), response);
                 } else {
@@ -607,7 +606,6 @@ public class BinService implements IBinService {
         catch (Exception e) {
             System.out.println("Error while trying periodical level retrieval of connected devices.");
         }
-
     }
 
 }
