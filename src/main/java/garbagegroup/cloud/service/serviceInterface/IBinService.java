@@ -37,4 +37,7 @@ public interface IBinService {
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
 
     boolean getDeviceStatusByBinId(Long binId);
+    void startPeriodicLevelRequest(int intervalSeconds);
+    void stopPeriodicLevelRequest();
+    void requestCurrentLevels();
 }
