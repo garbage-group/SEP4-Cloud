@@ -12,6 +12,7 @@ public interface IUserService {
     User fetchUserByUsername(String username);
     User create(CreateUserDto createUserDto);
     List<UserDto> fetchAllUsers();
-    void updateUser(UpdateUserDto user);
+    boolean updateUser(UpdateUserDto user);
     void deleteByUsername(String username);
+
 }

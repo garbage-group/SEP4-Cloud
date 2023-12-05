@@ -1,6 +1,5 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-
 import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
@@ -23,13 +22,10 @@ import java.util.List;
 
 @Service
 public class UserService implements IUserService {
-
     private final JwtService jwtService;
     private IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-
-
 
     @Autowired
     public UserService(JwtService jwtService, IUserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
@@ -57,6 +53,11 @@ public class UserService implements IUserService {
         }
     }
 
+    /**
+     * Deletes Garbage collector in the DB by their username
+     * Only allows to delete users whose role is "garbage collector"
+     * @param username
+     */
     @Override
     public void deleteByUsername(String username) {
         if (userRepository.existsById(username)) {
@@ -71,10 +72,11 @@ public class UserService implements IUserService {
      * If the user is found by username, the information (password, fullname, region) will be updated and saved to the database.
      *
      * @param user The UpdateUserDto containing the updated user information.
+     * @return
      * @throws RuntimeException If the user with the given username is not found or if an unexpected exception occurs during the update process.
      */
     @Override
-    public void updateUser(UpdateUserDto user) {
+    public boolean updateUser(UpdateUserDto user) {
         try {
             User userToUpdate = userRepository.findByUsername(user.getUsername());
             if (userToUpdate != null) {
@@ -84,10 +86,13 @@ public class UserService implements IUserService {
 
                 // Save the updated user to the database
                 userRepository.save(userToUpdate);
-        }
+                return true;
+            }
         } catch (Exception e) {
-            throw new RuntimeException("User with username " + user.getUsername() + " not found");
+            System.err.println("Error updating the User with username: " + user.getUsername() + e.getMessage());
+            return false;
         }
+        return false;
     }
 
     /**

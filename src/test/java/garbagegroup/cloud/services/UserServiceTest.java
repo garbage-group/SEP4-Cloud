@@ -1,11 +1,13 @@
 package garbagegroup.cloud.services;
 
 import garbagegroup.cloud.DTOs.CreateUserDto;
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceImplementation.UserService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -261,4 +263,50 @@ public class UserServiceTest {
         assertThrows(RuntimeException.class, () -> userService.fetchAllUsers());
         // Add assertions or further handling for exception scenarios if needed
     }
+
+    @Test
+    public void testUpdateUser_Success() {
+        UpdateUserDto userDto = new UpdateUserDto();
+        userDto.setUsername("testuser");
+        userDto.setPassword("newPassword");
+        userDto.setFullname("John Doe");
+        userDto.setRegion("US");
+
+        User existingUser = new User();
+        existingUser.setUsername("testuser");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(existingUser);
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
+
+        userService.updateUser(userDto);
+
+        verify(userRepository, times(1)).findByUsername("testuser");
+        verify(passwordEncoder, times(1)).encode("newPassword");
+
+        Assertions.assertEquals("encodedPassword", existingUser.getPassword());
+        Assertions.assertEquals("John Doe", existingUser.getFullname());
+        Assertions.assertEquals("US", existingUser.getRegion());
+        verify(userRepository, times(1)).save(existingUser);
+    }
+
+    @Test
+    public void testUpdateUser_ExceptionThrownByRepository_ReturnsFalse() {
+        UpdateUserDto userDto = new UpdateUserDto();
+        userDto.setUsername("testuser");
+        userDto.setPassword("newPassword");
+        userDto.setFullname("John Doe");
+        userDto.setRegion("US");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(new User());
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
+        doThrow(new RuntimeException("Database connection failed")).when(userRepository).save(any());
+
+        boolean result = userService.updateUser(userDto);
+        assertFalse(result);
+        verify(userRepository, times(1)).findByUsername("testuser");
+        verify(passwordEncoder, times(1)).encode("newPassword");
+        verify(userRepository, times(1)).save(any());
+    }
+
+
 }

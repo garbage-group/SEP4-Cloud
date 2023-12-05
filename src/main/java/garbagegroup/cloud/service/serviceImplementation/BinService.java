@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class BinService implements IBinService {
@@ -376,7 +377,7 @@ public class BinService implements IBinService {
         if (IoTDevices == null) return false;
         if (IoTDevices.isEmpty()) return false;
         for (ServerSocketHandler IoTDevice : IoTDevices) {
-            return IoTDevice.getDeviceId() == deviceId;
+            if (IoTDevice.getDeviceId() == deviceId) return true;
         }
         return false;
     }
@@ -457,7 +458,7 @@ public class BinService implements IBinService {
      * @param binId The ID of the Bin for which the last level reading is required
      * @return The value of the last recorded level reading or 0 if no readings are available
      */
-    private Level getLastLevelReadingWithTimestamp(Long binId) {
+    public Level getLastLevelReadingWithTimestamp(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             List<Level> allLevels = binOptional.get().getFillLevels();
@@ -473,8 +474,7 @@ public class BinService implements IBinService {
 
 
     /**
-     * Retrieves a list of bins where the current fill level exceeds the set threshold,
-     * generating notification data for each such bin.
+     * Retrieves a list of bins where the current fill level exceeds the set threshold
      *
      * @return List of NotificationBinDto objects representing bins with fill levels
      * surpassing their threshold.
@@ -482,33 +482,50 @@ public class BinService implements IBinService {
     @Override
     public List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel() {
         List<Bin> bins = binRepository.findAll();
-        // Initialize an empty list to store notifications
-        List<NotificationBinDto> notifications = new ArrayList<>();
 
-        for (Bin bin : bins) {
-            boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
-
-            if (isActiveDevice) {
-                // If the device is active, get the current fill level directly from the device
-                Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
-                if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
-                    notifications.add(convertToDTO(bin, currentLevelFromDevice));
-                }
-            } else {
-                // If the device is inactive, retrieve the latest level reading from the database
-                Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
-                double currentFillLevel = lastLevelWithTimestamp.getValue();
-                LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
-
-                if (currentFillLevel > bin.getFillThreshold()) {
-                    // Create a new Level object using the retrieved values and add it to notifications
-                    notifications.add(convertToDTO(bin, new Level(currentFillLevel, timestamp)));
-                }
-            }
-        }
-        return notifications;
+        return bins.stream()
+                .map(this::verifyBinsFillLevel)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Helped method to getBinsWithThresholdLessThanFillLevel
+     * If the bin has an active device, it requests fill level data from it and if the data is over the threshold of the bin, it returns the Level
+     * If the bin has inactive device, it fetches the last data from DB, and if it is above the threshold, it returns the Level
+     * Else returns null, so it is not saved as an alarming value in the stream in getBinsWithThresholdLessThanFillLevel
+     **
+     * @param bin
+     * @return NotificationBinDto
+     */
+
+    public NotificationBinDto verifyBinsFillLevel(Bin bin) {
+        boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
+
+        if (isActiveDevice) {
+            Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
+            if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
+                return convertToDTO(bin, currentLevelFromDevice);
+            }
+        } else {
+            Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
+            double currentFillLevel = lastLevelWithTimestamp.getValue();
+
+            if (currentFillLevel > bin.getFillThreshold()) {
+                LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
+                return convertToDTO(bin, new Level(currentFillLevel, timestamp));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets Status directly from the IoT device
+     * There is no communication with the DB here, because the status has to come directly from the IoT
+     * If there is no connection to the IoT, it just returns it as offline
+     * @param binId
+     * @return true (active)/ false (not-active)
+     */
     @Override
     public boolean getDeviceStatusByBinId(Long binId) {
         Optional<Bin> binOptional = binRepository.findById(binId);
@@ -523,7 +540,7 @@ public class BinService implements IBinService {
         } else throw new NoSuchElementException("Bin with id " + binId + " not found");
     }
 
-    private NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
+    public NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
         return new NotificationBinDto(
                 bin.getFillThreshold(),
                 bin.getId(),
@@ -531,8 +548,6 @@ public class BinService implements IBinService {
                 latestLevel.getDateTime()
         );
     }
-
-
 }
 
 
