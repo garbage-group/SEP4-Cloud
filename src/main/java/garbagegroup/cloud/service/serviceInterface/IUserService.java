@@ -9,12 +9,10 @@ import java.util.List;
 
 
 public interface IUserService {
-
     User fetchUserByUsername(String username);
     User create(CreateUserDto createUserDto);
-
     List<UserDto> fetchAllUsers();
-
     boolean updateUser(UpdateUserDto user);
+    void deleteByUsername(String username);
 
 }

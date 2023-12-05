@@ -16,7 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,11 +37,8 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
-
-//        User user = new User("admin", "password", "admin", "municipality worker", "horsens");
-//        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-//        IUserRepository.save(user);
     }
+
 
     /**
      * Fetches user details from the repository based on the provided username.
@@ -56,8 +53,17 @@ public class UserService implements IUserService {
         if (user != null) {
             return user;
         } else {
-            throw new RuntimeException("User with username " + username + " not found");
+            throw new NoSuchElementException("User with username " + username + " not found");
         }
+    }
+
+    @Override
+    public void deleteByUsername(String username) {
+        if (userRepository.existsById(username)) {
+            if (userRepository.findByUsername(username).getRole().equalsIgnoreCase("municipality worker"))
+                throw new IllegalArgumentException("You may only delete garbage collectors! No other roles.");
+            userRepository.deleteById(username);
+        } else throw new NoSuchElementException("User with username '" + username + "' not found");
     }
 
     /**
