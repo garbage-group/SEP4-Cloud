@@ -87,7 +87,7 @@ public class UserService implements IUserService {
                 // Save the updated user to the database
                 userRepository.save(userToUpdate);
                 return true;
-        }
+            }
         } catch (Exception e) {
             System.err.println("Error updating the User with username: " + user.getUsername() + e.getMessage());
             return false;

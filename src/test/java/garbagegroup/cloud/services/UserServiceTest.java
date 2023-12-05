@@ -290,7 +290,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testUpdateUser_ExceptionThrownByRepository() {
+    public void testUpdateUser_ExceptionThrownByRepository_ReturnsFalse() {
         UpdateUserDto userDto = new UpdateUserDto();
         userDto.setUsername("testuser");
         userDto.setPassword("newPassword");
@@ -301,9 +301,8 @@ public class UserServiceTest {
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
         doThrow(new RuntimeException("Database connection failed")).when(userRepository).save(any());
 
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            userService.updateUser(userDto);
-        });
+        boolean result = userService.updateUser(userDto);
+        assertFalse(result);
         verify(userRepository, times(1)).findByUsername("testuser");
         verify(passwordEncoder, times(1)).encode("newPassword");
         verify(userRepository, times(1)).save(any());
