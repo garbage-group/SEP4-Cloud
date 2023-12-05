@@ -13,11 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class    TCPServer implements ITCPServer, Runnable {
+public class TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
     List<ServerSocketHandler> IoTDevices = new ArrayList<>();
-    private List<DeviceStatusListener> deviceStatusListeners = new ArrayList<>();
     private IBinService binService;
 
     public TCPServer() {
@@ -27,7 +26,6 @@ public class    TCPServer implements ITCPServer, Runnable {
             e.printStackTrace();
         }
     }
-
 
 
     @Override
@@ -43,7 +41,6 @@ public class    TCPServer implements ITCPServer, Runnable {
                 IoTDevices.add(socketHandler);
                 int serialNumber = getIoTSerialNumber();
                 socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
-                notifyDeviceConnected(serialNumber);      // Notify the listeners that a new device has connected
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
 
             } catch (IOException e) {
@@ -60,13 +57,14 @@ public class    TCPServer implements ITCPServer, Runnable {
 
     /**
      * Method that requests humidity data from the IoT device and returns it to the BinService
+     *
      * @param deviceId
-     * @return  humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
+     * @return humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
      */
     @Override
     public String getDataById(int deviceId, String payload) {
         String response = "";
-        for (ServerSocketHandler ssh: IoTDevices) {
+        for (ServerSocketHandler ssh : IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
                 response = ssh.sendMessage(payload);
             }
@@ -75,20 +73,22 @@ public class    TCPServer implements ITCPServer, Runnable {
     }
 
     /**
-     * Sets the fill threshold for the connected IoT devices.
-     * Sends a command to set the fill threshold value to all connected IoT devices
-     * through their respective server socket handlers.
+     * Sends data to the IoT device through their respective server socket handlers
      *
-     * @param newThreshold The new fill threshold value to be set
+     * @param payload - for example - "setFillThreshold(25.0)", "calibrateDevice"
      * @return The response received from the IoT devices after attempting to set the fill threshold
      */
     @Override
-    public String setFillThreshold(double newThreshold) {
+    public boolean setIoTData(int deviceId, String payload) {
         String response = "";
-        for (ServerSocketHandler ssh: IoTDevices) {
-            response = ssh.sendMessage("setFillThreshold(" + newThreshold + ")");
+        for (ServerSocketHandler ssh : IoTDevices) {
+            if (ssh.getDeviceId() == deviceId) {
+                if (payload.equals("calibrateDevice")) {
+                    response = ssh.sendMessage(payload);
+                }
+            }
         }
-        return response;
+        return response.equals("OK");
     }
 
     /**
@@ -100,38 +100,14 @@ public class    TCPServer implements ITCPServer, Runnable {
     }
 
 
-
     /**
      * Requests a serial number from the IoT device
+     *
      * @return device's serial number
      */
     public int getIoTSerialNumber() {
         String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
-
-    /**
-     * Adds a DeviceStatusListener to the list of listeners.
-     * This method registers a listener to receive notifications related to device status changes.
-     *
-     */
-    @Override
-    public void addDeviceStatusListener(DeviceStatusListener listener) {
-        deviceStatusListeners.add(listener);
-    }
-
-
-
-    /**
-     * Notifies all registered listeners about the connection of a device.
-     * Calls the 'onDeviceConnected' method for each registered listener,
-     * providing the device ID that has been connected.
-     */
-    private void notifyDeviceConnected(int deviceId) {
-        for (DeviceStatusListener listener : deviceStatusListeners) {
-            listener.onDeviceConnected(deviceId);
-        }
-    }
-
 
 }

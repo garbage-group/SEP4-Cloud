@@ -323,6 +323,10 @@ public class BinService implements IBinService {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
             createdBin.setDeviceId(deviceId);
+            if (!tcpServer.setIoTData(deviceId, "calibrateDevice")) {
+                // Try to calibrate the device and if it returns false, something went wrong - but we don't even throw exception because it is not so important
+                System.out.println("The device could not be calibrated");
+            }
         }
         return createdBin;
     }
