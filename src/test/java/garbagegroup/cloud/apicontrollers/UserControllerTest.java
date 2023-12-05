@@ -1,5 +1,8 @@
 package garbagegroup.cloud.apicontrollers;
 
+import garbagegroup.cloud.DTOs.CreateUserDto;
+import garbagegroup.cloud.DTOs.DTOConverter;
+import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.controller.UserController;
 import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
@@ -9,11 +12,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.mockito.Mockito.*;
 
 public class UserControllerTest {
@@ -26,6 +36,12 @@ public class UserControllerTest {
 
     @InjectMocks
     private UserController userController;
+
+    @InjectMocks
+    private DTOConverter dtoConverter;
+
+    @InjectMocks
+    private UpdateUserDto updateUserDto;
 
     @BeforeEach
     public void setUp() {
@@ -50,6 +66,25 @@ public class UserControllerTest {
     }
 
     @Test
+    public void fetchUserByUsername_ReturnsUserDto() {
+        // Given
+        String username = "existinguser";
+        User user = new User("existinguser", "password", "Full Name", "ROLE_USER", "Region");
+
+        // Mock behavior
+        when(userService.fetchUserByUsername(username)).thenReturn(user);
+
+        // When
+        ResponseEntity<UserDto> responseEntity = userController.fetchUserByUsername(username);
+
+        // Then
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(user.getUsername(), responseEntity.getBody().getUsername());
+        // Add assertions for other fields as needed
+        verify(userService, times(1)).fetchUserByUsername(username);
+    }
+
+    @Test
     public void authenticate_ThrowsException_ReturnsNotFound() {
         // Given
         UserDto userDto = new UserDto(); // Create or mock a UserDto object as needed
@@ -65,28 +100,6 @@ public class UserControllerTest {
     }
 
     @Test
-    public void fetchUserByUsername_ReturnsUserDto() {
-        // Given
-        String username = "testuser";
-        User user = new User(); // Mock User object
-        UserDto userDto = new UserDto(); // Create a UserDto object or mock as needed
-
-        // Mock behavior
-        when(userService.fetchUserByUsername(username)).thenReturn(user);
-        // Assume a service method convertToUserDto exists, or mock it accordingly
-        when(userService.convertToUserDto(user)).thenReturn(userDto);
-
-        // When
-        ResponseEntity<UserDto> responseEntity = userController.fetchUserByUsername(username);
-
-        // Then
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(userDto, responseEntity.getBody());
-        verify(userService, times(1)).fetchUserByUsername(username);
-        verify(userService, times(1)).convertToUserDto(user);
-    }
-
-    @Test
     public void fetchUserByUsername_ThrowsException_ReturnsBadRequest() {
         // Given
         String username = "nonexistentuser";
@@ -99,5 +112,130 @@ public class UserControllerTest {
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void createUser_WhoIsGarbageCollector_ReturnsUserAndOKResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Garbage Collector",
+                "Testion"
+        );
+        User user = new User(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Garbage Collector",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenReturn(user);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(user, responseEntity.getBody());
+    }
+
+    @Test
+    public void createUser_WhoIsNotGarbageCollector_ReturnBadRequestResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "testername",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(IllegalArgumentException.class);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void createUser_WhoAlreadyExists_ReturnsConflictResponse() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "admin",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(DuplicateKeyException.class);
+
+        //Act
+        ResponseEntity<User> responseEntity = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
+    }
+    
+    public void fetchAllUsers_ThrowsException_ReturnsBadRequest() {
+        // Mock behavior to throw an exception
+        when(userService.fetchAllUsers()).thenThrow(new RuntimeException("Error retrieving users"));
+
+        // When
+        ResponseEntity<List<UserDto>> responseEntity = userController.fetchAllUsers();
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void testUpdateUser_Success() {
+        // Mock data
+        String username = "testUser";
+        UpdateUserDto updateUserDto = new UpdateUserDto();
+        updateUserDto.setFullname("Updated Fullname");
+        updateUserDto.setPassword("newPassword");
+        updateUserDto.setRegion("Updated Region");
+
+        User user = new User();
+        user.setUsername(username);
+
+        // Stubbing the userService methods
+        when(userService.fetchUserByUsername(username)).thenReturn(user);
+
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
+
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User updated successfully", response.getBody());
+    }
+
+    @Test
+    public void testUpdateUser_Failure() {
+        // Mock data
+        String username = "testUser";
+        UpdateUserDto updateUserDto = new UpdateUserDto();
+
+        // Stubbing the userService methods to simulate an exception
+        when(userService.fetchUserByUsername(username)).thenThrow(new RuntimeException());
+
+        // Perform the update
+        ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
+
+        // Verify interactions and assertions
+        verify(userService, times(1)).fetchUserByUsername(username);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }

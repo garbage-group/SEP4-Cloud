@@ -82,6 +82,10 @@ public class Client {
                     outToServer.write("statu:OK".getBytes());
                     outToServer.flush();
                 }
+                else if (result.equals("calibrateDevice")) {
+                    outToServer.write("OK".getBytes());
+                    outToServer.flush();
+                }
             }
             catch (IOException e)
             {

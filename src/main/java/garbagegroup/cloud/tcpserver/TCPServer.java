@@ -1,5 +1,8 @@
 package garbagegroup.cloud.tcpserver;
 
+import garbagegroup.cloud.DTOs.UpdateBinDto;
+import garbagegroup.cloud.service.serviceImplementation.BinService;
+import garbagegroup.cloud.service.serviceInterface.IBinService;
 import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,7 @@ public class TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
     List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+    private IBinService binService;
 
     public TCPServer() {
         try {
@@ -22,6 +26,7 @@ public class TCPServer implements ITCPServer, Runnable {
             e.printStackTrace();
         }
     }
+
 
     @Override
     public void run() {
@@ -37,6 +42,7 @@ public class TCPServer implements ITCPServer, Runnable {
                 int serialNumber = getIoTSerialNumber();
                 socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
+
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
                 //e.printStackTrace();
@@ -51,13 +57,14 @@ public class TCPServer implements ITCPServer, Runnable {
 
     /**
      * Method that requests humidity data from the IoT device and returns it to the BinService
+     *
      * @param deviceId
-     * @return  humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
+     * @return humidity data from the IoT device, if available, otherwise String that indicates that the device is not available
      */
     @Override
     public String getDataById(int deviceId, String payload) {
         String response = "";
-        for (ServerSocketHandler ssh: IoTDevices) {
+        for (ServerSocketHandler ssh : IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
                 response = ssh.sendMessage(payload);
             }
@@ -66,20 +73,22 @@ public class TCPServer implements ITCPServer, Runnable {
     }
 
     /**
-     * Sets the fill threshold for the connected IoT devices.
-     * Sends a command to set the fill threshold value to all connected IoT devices
-     * through their respective server socket handlers.
+     * Sends data to the IoT device through their respective server socket handlers
      *
-     * @param newThreshold The new fill threshold value to be set
+     * @param payload - for example - "setFillThreshold(25.0)", "calibrateDevice"
      * @return The response received from the IoT devices after attempting to set the fill threshold
      */
     @Override
-    public String setFillThreshold(double newThreshold) {
+    public boolean setIoTData(int deviceId, String payload) {
         String response = "";
-        for (ServerSocketHandler ssh: IoTDevices) {
-            response = ssh.sendMessage("setFillThreshold(" + newThreshold + ")");
+        for (ServerSocketHandler ssh : IoTDevices) {
+            if (ssh.getDeviceId() == deviceId) {
+                if (payload.equals("calibrateDevice")) {
+                    response = ssh.sendMessage(payload);
+                }
+            }
         }
-        return response;
+        return response.equals("OK");
     }
 
     /**
@@ -90,12 +99,15 @@ public class TCPServer implements ITCPServer, Runnable {
         return IoTDevices;
     }
 
+
     /**
      * Requests a serial number from the IoT device
+     *
      * @return device's serial number
      */
     public int getIoTSerialNumber() {
         String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
+
 }
