@@ -1,6 +1,5 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-
 import garbagegroup.cloud.DTOs.UpdateUserDto;
 import garbagegroup.cloud.DTOs.CreateUserDto;
 import garbagegroup.cloud.DTOs.DTOConverter;
@@ -23,13 +22,10 @@ import java.util.List;
 
 @Service
 public class UserService implements IUserService {
-
     private final JwtService jwtService;
     private IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-
-
 
     @Autowired
     public UserService(JwtService jwtService, IUserRepository userRepository, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
@@ -57,6 +53,11 @@ public class UserService implements IUserService {
         }
     }
 
+    /**
+     * Deletes Garbage collector in the DB by their username
+     * Only allows to delete users whose role is "garbage collector"
+     * @param username
+     */
     @Override
     public void deleteByUsername(String username) {
         if (userRepository.existsById(username)) {
