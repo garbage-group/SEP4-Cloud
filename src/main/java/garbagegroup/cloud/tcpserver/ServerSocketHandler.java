@@ -19,7 +19,7 @@ public class ServerSocketHandler{
       outToClient = socket.getOutputStream();
       inFromClient = socket.getInputStream();
     } catch (IOException e) {
-      e.printStackTrace();
+      System.out.println("Thrown IOException when initializing ServerSocketHandler");
     }
   }
 
