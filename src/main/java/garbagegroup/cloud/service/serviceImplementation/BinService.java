@@ -284,9 +284,44 @@ public class BinService implements IBinService {
         for (Bin bin: bins) {
             BinDto dto = DTOConverter.convertToBinDto(bin);
 
+            // Set status
+            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
+            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
+
+            // Set pickup date
+            setPickupDate(bin);
+
+            // Set last emptied time
+            setLastEmptiedTime(bin);
+
             binDtos.add(dto);
         }
         return binDtos;
+    }
+
+    public void setPickupDate(Bin bin) {
+        //check the fill level of bin from the database and if it exceed the threshold, set the pickup date to tomorrow
+        Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
+        double currentFillLevel = lastLevelWithTimestamp.getValue();
+        if (currentFillLevel > bin.getFillThreshold()) {
+            LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
+            //if the fill level time is after 14:00, set the pickup date to tomorrow otherwise set it after two hours
+            if (timestamp.getHour() >= 14) {
+                bin.setPickUpTime(timestamp.plusDays(1));
+            } else {
+                bin.setPickUpTime(timestamp.plusHours(3));
+            }
+            binRepository.save(bin);
+        }
+    }
+
+    public void setLastEmptiedTime(Bin bin) {
+        //check the last pickup date of bin and set the last emptied date to the same date
+        LocalDateTime lastPickupTime = binRepository.findLastPickupTime(bin.getId());
+        if (lastPickupTime != null) {
+            bin.setEmptiedLast(lastPickupTime);
+            binRepository.save(bin);
+        }
     }
 
     @Override
@@ -539,8 +574,9 @@ public class BinService implements IBinService {
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
             if (response.equals("statu:OK")) return true;
             else if (response.equals("statu:NOT OK")) return false;
-            else throw new NoSuchElementException("The device on bin " + binId + " is offline");
-        } else throw new NoSuchElementException("Bin with id " + binId + " not found");
+           // else throw new NoSuchElementException("The device on bin " + binId + " is offline");
+        }//else throw new NoSuchElementException("Bin with id " + binId + " not found");
+        return false;
     }
 
     public NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
