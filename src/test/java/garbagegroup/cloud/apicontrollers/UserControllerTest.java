@@ -8,6 +8,8 @@ import garbagegroup.cloud.DTOs.UserDto;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.service.serviceImplementation.UserService;
+import io.swagger.models.Response;
+import jdk.jshell.spi.ExecutionControl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.mockito.Mockito.*;
 
@@ -184,7 +187,29 @@ public class UserControllerTest {
         //Assert
         assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
     }
-    
+
+    @Test
+    public void createUser_UserServiceThrowsOtherException_ReturnsInternalServerErrorStatus() {
+        //Arrange
+        CreateUserDto createUserDto = new CreateUserDto(
+                "admin",
+                "Tester Testman",
+                "testword",
+                "Dude",
+                "Testion"
+        );
+
+        //Mock
+        when(userService.create(any(CreateUserDto.class))).thenThrow(NullPointerException.class);
+
+        //Act
+        ResponseEntity<User> result = userController.createUser(createUserDto);
+
+        //Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+    @Test
     public void fetchAllUsers_ThrowsException_ReturnsBadRequest() {
         // Mock behavior to throw an exception
         when(userService.fetchAllUsers()).thenThrow(new RuntimeException("Error retrieving users"));
@@ -226,5 +251,53 @@ public class UserControllerTest {
         ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void deleteUserByUsername_UserServiceThrowsNoSuchElementException_ReturnsNotFoundStatus() {
+        //mock
+        when(userService.deleteByUsername(any(String.class))).thenThrow(NoSuchElementException.class);
+
+        //Act
+        ResponseEntity<String> result = userController.deleteUserByUsername("testor");
+
+        //Assert
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void deleteUserByUsername_UserServiceThrowsIllegalArgumentException_ReturnsBadRequestStatus() {
+        //Mock
+        when(userService.deleteByUsername(any(String.class))).thenThrow((IllegalArgumentException.class));
+
+        //Act
+        ResponseEntity<String> result = userController.deleteUserByUsername("testerington");
+
+        //Assert
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void deleteUserByUsername_UserServiceThrowsOtherException_ReturnsInternalServerErrorStatus() {
+        //Mock
+        when(userService.deleteByUsername(any(String.class))).thenThrow((NullPointerException.class));
+
+        //Act
+        ResponseEntity<String> result = userController.deleteUserByUsername("testerington");
+
+        //Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+    @Test
+    public void deleteUserByUsername_SuccessfulRun_ReturnsOKStatus() {
+        //Mock
+        when(userService.deleteByUsername(any(String.class))).thenReturn(Boolean.TRUE);
+
+        //Act
+        ResponseEntity<String> result = userController.deleteUserByUsername("testerington");
+
+        //Assert
+        assertEquals(HttpStatus.OK, result.getStatusCode());
     }
 }

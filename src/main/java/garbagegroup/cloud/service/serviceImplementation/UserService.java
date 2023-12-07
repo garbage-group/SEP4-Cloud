@@ -59,11 +59,12 @@ public class UserService implements IUserService {
      * @param username
      */
     @Override
-    public void deleteByUsername(String username) {
+    public boolean deleteByUsername(String username) {
         if (userRepository.existsById(username)) {
             if (userRepository.findByUsername(username).getRole().equalsIgnoreCase("municipality worker"))
                 throw new IllegalArgumentException("You may only delete garbage collectors! No other roles.");
             userRepository.deleteById(username);
+            return true;
         } else throw new NoSuchElementException("User with username '" + username + "' not found");
     }
 
