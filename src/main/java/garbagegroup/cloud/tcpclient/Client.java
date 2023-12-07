@@ -25,6 +25,8 @@ public class Client {
             t.setDaemon(true);
             t.start();
 
+            while(true) {}
+
         } catch (IOException e){
             System.out.println("IOException was thrown by the Client Socket");
             //e.printStackTrace();

@@ -22,6 +22,7 @@ public class DTOConverter {
         dto.setHumidity(bin.getHumidity());
         dto.setFillLevels(bin.getFillLevels());
         dto.setTemperatures(bin.getTemperatures());
+        dto.setStatus("");
         return dto;
     }
 

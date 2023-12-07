@@ -272,30 +272,40 @@ public class BinService implements IBinService {
         }
     }
 
+    public BinDto convertToBinDtoAndSetValues(Bin bin) {
+        BinDto dto = DTOConverter.convertToBinDto(bin);
+        // Set status
+        boolean deviceStatus = false;
+        try {
+            deviceStatus = getDeviceStatusByBinId(bin.getId());
+        } catch (NoSuchElementException e) {
+            dto.setStatus("OFFLINE");
+        }
+        if (!dto.getStatus().equals("OFFLINE")) dto.setStatus(deviceStatus ? "ACTIVE" : "ERROR");
+
+        // Set pickup date
+        dto.setPickUpTime(setPickupDate(bin));
+
+        // Set last emptied time
+        dto.setEmptiedLast(setLastEmptiedTime(bin));
+
+        return dto;
+    }
+
     @Override
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
         List<BinDto> binDtos = new ArrayList<>();
         for (Bin bin : bins) {
-            BinDto dto = DTOConverter.convertToBinDto(bin);
-
-            // Set status
-//            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
-//            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
-
-            // Set pickup date
-            setPickupDate(bin);
-
-            // Set last emptied time
-            setLastEmptiedTime(bin);
+            BinDto dto = convertToBinDtoAndSetValues(bin);
 
             binDtos.add(dto);
         }
         return binDtos;
     }
 
-    public void setPickupDate(Bin bin) {
-        //check the fill level of bin from the database and if it exceed the threshold, set the pickup date to tomorrow
+    public LocalDateTime setPickupDate(Bin bin) {
+        //check the fill level of bin from the database and if it exceeds the threshold, set the pickup date to tomorrow
         Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
         double currentFillLevel = lastLevelWithTimestamp.getValue();
         if (currentFillLevel > bin.getFillThreshold()) {
@@ -308,15 +318,17 @@ public class BinService implements IBinService {
             }
             binRepository.save(bin);
         }
+        return bin.getPickUpTime();
     }
 
-    public void setLastEmptiedTime(Bin bin) {
+    public LocalDateTime setLastEmptiedTime(Bin bin) {
         //check the last pickup date of bin and set the last emptied date to the same date
         LocalDateTime lastPickupTime = binRepository.findLastPickupTime(bin.getId());
         if (lastPickupTime != null) {
             bin.setEmptiedLast(lastPickupTime);
             binRepository.save(bin);
         }
+        return bin.getEmptiedLast();
     }
 
     @Override
@@ -324,8 +336,8 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = DTOConverter.convertToBinDto(bin);
-            return Optional.of(binDto);
+            BinDto dto = convertToBinDtoAndSetValues(bin);
+            return Optional.of(dto);
         } else {
             return Optional.empty();
         }
