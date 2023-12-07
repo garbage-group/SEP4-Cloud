@@ -20,6 +20,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven and Run tests
+        env:
+          SEP_DB_USERNAME: ${{ secrets.DB_USER }}
+          SEP_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: mvn clean package
 
       - name: Build Docker Image
