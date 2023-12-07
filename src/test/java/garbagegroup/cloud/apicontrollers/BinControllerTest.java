@@ -1,10 +1,7 @@
 package garbagegroup.cloud.apicontrollers;
 
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.NotificationBinDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.controller.BinController;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -437,5 +434,38 @@ public class BinControllerTest {
         assertTrue(result.getBody().contains("online"));
     }
 
+    @Test
+    public void testActivateBuzzer_Success() {
+        // Mocking the dependencies
+        BuzzerActivationDto validRequest = new BuzzerActivationDto(123L);
+
+        // Mock the behavior of binService.sendBuzzerActivationToIoT() method
+        when(binService.sendBuzzerActivationToIoT(123L)).thenReturn(true);
+
+        // Call the method to be tested
+        ResponseEntity<String> response = binController.activateBuzzer(validRequest);
+
+        // Assertions
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Buzzer activation sent to IoT device for Bin ID: 123", response.getBody());
+
+        // Verify that the method in the service was called with the correct parameter
+        verify(binService, times(1)).sendBuzzerActivationToIoT(123L);
+    }
+
+    @Test
+    public void testActivateBuzzer_InvalidRequest() {
+        BuzzerActivationDto invalidRequest = new BuzzerActivationDto(); // Empty request
+
+        ResponseEntity<String> response = binController.activateBuzzer(invalidRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Invalid request. Bin ID not provided or is null.", response.getBody());
+
+        // Ensure that binService.sendBuzzerActivationToIoT() was not called
+        verify(binService, never()).sendBuzzerActivationToIoT(anyLong());
+    }
 
 }

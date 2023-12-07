@@ -8,4 +8,5 @@ public interface ITCPServer {
     String getDataById(int deviceId, String payload);
     void startServer();
     List<ServerSocketHandler> getIoTDevices();
+
 }

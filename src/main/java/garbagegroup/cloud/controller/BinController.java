@@ -45,6 +45,24 @@ public class BinController {
         }
     }
 
+    @PostMapping("/{id}/buzzer_activation")
+    public ResponseEntity<String> activateBuzzer(@RequestBody BuzzerActivationDto request) {
+        try {
+            // Ensure the request object is received correctly and contains the binId
+            if (request.getBinId() != null) {
+                    binService.sendBuzzerActivationToIoT(request.getBinId());
+                    return ResponseEntity.ok("Buzzer activation sent to IoT device for Bin ID: " + request.getBinId());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Invalid request. Bin ID not provided or is null.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing request: " + e.getMessage());
+        }
+    }
+
+
     @GetMapping("/{id}/temperature")
     public ResponseEntity<Temperature> getCurrentTemperatureByBinId(@PathVariable Long id) {
         try {

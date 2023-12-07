@@ -1099,5 +1099,51 @@ public class BinServiceTest {
         assertNull(bin.getEmptiedLast());
     }
 
+    @Test
+    public void testSendBuzzerActivationToIoT_Success() {
+
+        // Create a sample Bin instance
+        Bin bin = new Bin();
+        bin.setId(1L);
+        bin.setDeviceId(123); // Sample device ID
+
+        // Stub the behavior of binRepository.findById()
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+
+        // Stub the behavior of tcpServer.setIoTData()
+        when(tcpServer.setIoTData(123, "activateBuzzer")).thenReturn(true);
+
+        // Call the method under test
+        boolean result = binService.sendBuzzerActivationToIoT(1L);
+
+        // Assertions
+        assertTrue(result);
+
+        // Verify
+        verify(binRepository).findById(1L);
+
+        // Verify
+        verify(tcpServer).setIoTData(123, "activateBuzzer");
+    }
+
+    @Test
+    public void testSendBuzzerActivationToIoT_BinNotFound() {
+
+        // Stub the behavior
+        when(binRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Call the method under test
+        boolean result = binService.sendBuzzerActivationToIoT(1L);
+
+        // Assertions
+        assertFalse(result);
+
+        // Verify
+        verify(binRepository).findById(1L);
+
+        // Verify
+        verifyNoInteractions(tcpServer);
+    }
+
 
 }
