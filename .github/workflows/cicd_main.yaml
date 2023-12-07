@@ -43,14 +43,14 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Configure Docker for GCR
+      - name: Configure Docker for Google Cloud Run
         run: gcloud auth configure-docker
 
       - name: Pull image from Docker Hub
         run: |
           docker pull zythaarcz/garbage-backend:latest
 
-      - name: Tag image for GCR
+      - name: Tag image for Google Container Registry
         if: success()
         run: docker tag zythaarcz/garbage-backend:latest gcr.io/${{ secrets.GCP_PROJECT_ID }}/garbage-backend:latest
 
