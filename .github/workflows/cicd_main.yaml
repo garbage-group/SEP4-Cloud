@@ -66,4 +66,5 @@ jobs:
             --platform managed \
             --region europe-west3 \
             --allow-unauthenticated \
-            --service-account sep4-account@handy-parity-406210.iam.gserviceaccount.com
+            --service-account sep4-account@handy-parity-406210.iam.gserviceaccount.com \
+            --update-env-vars SEP_DB_USERNAME=${{ secrets.DB_USERNAME }},SEP_DB_PASSWORD=${{ secrets.DB_PASSWORD }}
