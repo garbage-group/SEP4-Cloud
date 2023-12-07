@@ -29,8 +29,7 @@ public class User implements UserDetails {
 
     private String region;
 
-    public User() {
-    }
+    public User() {}
 
     public User(String username, String password, String fullname, String role, String region) {
 

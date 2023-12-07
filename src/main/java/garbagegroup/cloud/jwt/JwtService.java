@@ -21,7 +21,6 @@ import java.util.function.Function;
  */
 @Service
 public class JwtService {
-
     private static final String SECRET_KEY = "thisisourrandomsecretkeythatismorethan16character";
 
     /**
@@ -88,6 +87,7 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
+
     /**
      * Extracts the expiration date from the provided JWT token.
      *
@@ -110,8 +110,6 @@ public class JwtService {
         LocalDate localDate = LocalDate.now().plusDays(1);
         Date expirationDate = Date.from(localDate.atStartOfDay().atZone(calendar.getTimeZone().toZoneId()).toInstant());
 
-
-
         Claims claims = Jwts.claims();
         claims.put(Claims.SUBJECT, userDetails.getUsername());
         claims.put("username", userDetails.getUsername());
@@ -123,7 +121,6 @@ public class JwtService {
                 .setExpiration(expirationDate)
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256).compact();
     }
-
 
     /**
      * Resolves the JWT token from the HTTP request's Authorization header.
@@ -138,6 +135,4 @@ public class JwtService {
         }
         return null;
     }
-
-
 }

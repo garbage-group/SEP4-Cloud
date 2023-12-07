@@ -1,17 +1,12 @@
 package garbagegroup.cloud.DTOs;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.model.Level;
-import garbagegroup.cloud.model.Temperature;
+import garbagegroup.cloud.model.*;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class BinDto {
-
     private Long id;
     private Double longitude;
     private Double latitude;
@@ -27,6 +22,7 @@ public class BinDto {
 
     public BinDto(){
     }
+
     public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels, List<Temperature> temperatures, String status) {
         this.id = id;
         this.longitude = longitude;
@@ -49,9 +45,11 @@ public class BinDto {
     public void setStatus(String status) {
         this.status = status;
     }
+
     public Double getLongitude() {
         return longitude;
     }
+
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }

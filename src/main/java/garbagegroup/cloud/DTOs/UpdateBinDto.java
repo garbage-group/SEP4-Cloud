@@ -6,9 +6,7 @@ public class UpdateBinDto {
     private Double latitude;
     private Double fillthreshold;
 
-
-    public UpdateBinDto() {
-    }
+    public UpdateBinDto() {}
 
     public UpdateBinDto(Long id, Double longitude, Double latitude, Double fillthreshold) {
         this.id = id;
