@@ -1,14 +1,9 @@
 package garbagegroup.cloud.controller;
 
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.NotificationBinDto;
-import garbagegroup.cloud.model.Bin;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.model.Level;
-import garbagegroup.cloud.model.Temperature;
+import garbagegroup.cloud.DTOs.*;
+import garbagegroup.cloud.model.*;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +27,11 @@ public class BinController {
         this.binService = binService;
     }
 
-
     /**
      * The method tries to retrieve humidity information from a service based on a provided ID,
      * handles cases where the humidity is present or not,
      * and logs and returns an error response in case of an exception.
      */
-
     @GetMapping("/{id}/humidity")
     public ResponseEntity<Humidity> getCurrentHumidityByBinId(@PathVariable Long id) {
         try {
@@ -46,7 +39,6 @@ public class BinController {
 
             return humidity.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -60,7 +52,6 @@ public class BinController {
 
             return temperature.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -74,7 +65,6 @@ public class BinController {
 
             return fillLevel.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-
         } catch (Exception e) {
             logger.error("Error retrieving humidity for bin with id {}", id, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -184,6 +174,5 @@ public class BinController {
         binService.stopPeriodicLevelRequest();
         return ResponseEntity.ok("Periodic level request stopped");
     }
-
 }
 

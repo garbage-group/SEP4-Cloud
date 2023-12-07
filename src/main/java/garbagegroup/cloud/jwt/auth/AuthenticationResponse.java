@@ -1,9 +1,6 @@
 package garbagegroup.cloud.jwt.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * A class representing an authentication response containing a token.
