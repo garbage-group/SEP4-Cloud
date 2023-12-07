@@ -1,13 +1,10 @@
 package garbagegroup.cloud.DTOs;
 
-import garbagegroup.cloud.model.Bin;
-import garbagegroup.cloud.model.User;
+import garbagegroup.cloud.model.*;
 
 public class DTOConverter {
 
-    private DTOConverter() {
-
-    }
+    private DTOConverter() {}
 
     public static BinDto convertToBinDto(Bin bin){
         BinDto dto = new BinDto();
@@ -22,6 +19,7 @@ public class DTOConverter {
         dto.setHumidity(bin.getHumidity());
         dto.setFillLevels(bin.getFillLevels());
         dto.setTemperatures(bin.getTemperatures());
+        dto.setStatus("");
         return dto;
     }
 

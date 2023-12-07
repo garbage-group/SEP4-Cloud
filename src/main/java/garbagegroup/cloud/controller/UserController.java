@@ -1,13 +1,11 @@
 package garbagegroup.cloud.controller;
 
-import garbagegroup.cloud.DTOs.UpdateUserDto;
-import garbagegroup.cloud.DTOs.CreateUserDto;
-import garbagegroup.cloud.DTOs.DTOConverter;
-import garbagegroup.cloud.DTOs.UserDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.service.serviceImplementation.UserService;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +13,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.NoSuchElementException;
 
+import java.util.NoSuchElementException;
 import java.util.List;
 
 @RestController
@@ -45,8 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(
-            @RequestBody UserDto request) {
+    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody UserDto request) {
         try {
             return ResponseEntity.ok(service.authenticate(request));
         } catch (Exception e) {

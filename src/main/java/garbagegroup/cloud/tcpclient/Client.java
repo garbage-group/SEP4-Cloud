@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.net.*;
 import java.util.Random;
-import java.util.Scanner;
 
 @Component
 public class Client {
@@ -25,9 +24,10 @@ public class Client {
             t.setDaemon(true);
             t.start();
 
+            while(true) {}
+
         } catch (IOException e){
             System.out.println("IOException was thrown by the Client Socket");
-            //e.printStackTrace();
         }
     }
 

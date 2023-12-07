@@ -4,17 +4,14 @@ import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.*;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
-import garbagegroup.cloud.tcpserver.ITCPServer;
-import garbagegroup.cloud.tcpserver.ServerSocketHandler;
+import garbagegroup.cloud.tcpserver.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -24,18 +21,15 @@ public class BinService implements IBinService {
     private IBinRepository binRepository;
     private ScheduledExecutorService executorService;
 
-
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
-
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
 
-    public BinService() {
-    }
+    public BinService() {}
 
     /**
      * Fetches SensorData from the IoT device
@@ -264,12 +258,33 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public void deleteBinById(long binId) {
+    public boolean deleteBinById(long binId) {
         if (binRepository.existsById(binId)) {
             binRepository.deleteById(binId);
+            return true;
         } else {
             throw new NoSuchElementException("Bin with id " + binId + " not found");
         }
+    }
+
+    public BinDto convertToBinDtoAndSetValues(Bin bin) {
+        BinDto dto = DTOConverter.convertToBinDto(bin);
+        // Set status
+        boolean deviceStatus = false;
+        try {
+            deviceStatus = getDeviceStatusByBinId(bin.getId());
+        } catch (NoSuchElementException e) {
+            dto.setStatus("OFFLINE");
+        }
+        if (!dto.getStatus().equals("OFFLINE")) dto.setStatus(deviceStatus ? "ACTIVE" : "ERROR");
+
+        // Set pickup date
+        dto.setPickUpTime(setPickupDate(bin));
+
+        // Set last emptied time
+        dto.setEmptiedLast(setLastEmptiedTime(bin));
+
+        return dto;
     }
 
     @Override
@@ -277,25 +292,15 @@ public class BinService implements IBinService {
         List<Bin> bins = binRepository.findAll();
         List<BinDto> binDtos = new ArrayList<>();
         for (Bin bin : bins) {
-            BinDto dto = DTOConverter.convertToBinDto(bin);
-
-            // Set status
-//            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
-//            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
-
-            // Set pickup date
-            setPickupDate(bin);
-
-            // Set last emptied time
-            setLastEmptiedTime(bin);
+            BinDto dto = convertToBinDtoAndSetValues(bin);
 
             binDtos.add(dto);
         }
         return binDtos;
     }
 
-    public void setPickupDate(Bin bin) {
-        //check the fill level of bin from the database and if it exceed the threshold, set the pickup date to tomorrow
+    public LocalDateTime setPickupDate(Bin bin) {
+        //check the fill level of bin from the database and if it exceeds the threshold, set the pickup date to tomorrow
         Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
         double currentFillLevel = lastLevelWithTimestamp.getValue();
         if (currentFillLevel > bin.getFillThreshold()) {
@@ -308,15 +313,17 @@ public class BinService implements IBinService {
             }
             binRepository.save(bin);
         }
+        return bin.getPickUpTime();
     }
 
-    public void setLastEmptiedTime(Bin bin) {
+    public LocalDateTime setLastEmptiedTime(Bin bin) {
         //check the last pickup date of bin and set the last emptied date to the same date
         LocalDateTime lastPickupTime = binRepository.findLastPickupTime(bin.getId());
         if (lastPickupTime != null) {
             bin.setEmptiedLast(lastPickupTime);
             binRepository.save(bin);
         }
+        return bin.getEmptiedLast();
     }
 
     @Override
@@ -324,8 +331,8 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = DTOConverter.convertToBinDto(bin);
-            return Optional.of(binDto);
+            BinDto dto = convertToBinDtoAndSetValues(bin);
+            return Optional.of(dto);
         } else {
             return Optional.empty();
         }
@@ -531,7 +538,6 @@ public class BinService implements IBinService {
      * @param bin
      * @return NotificationBinDto
      */
-
     public NotificationBinDto verifyBinsFillLevel(Bin bin) {
         boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
 
@@ -565,7 +571,6 @@ public class BinService implements IBinService {
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
             // Send fill threshold data to the IoT device
-
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
             if (response.equals("statu:OK")) return true;
             else if (response.equals("statu:NOT OK")) return false;
