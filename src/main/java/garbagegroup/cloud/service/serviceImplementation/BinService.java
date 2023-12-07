@@ -264,9 +264,10 @@ public class BinService implements IBinService {
     }
 
     @Override
-    public void deleteBinById(long binId) {
+    public boolean deleteBinById(long binId) {
         if (binRepository.existsById(binId)) {
             binRepository.deleteById(binId);
+            return true;
         } else {
             throw new NoSuchElementException("Bin with id " + binId + " not found");
         }

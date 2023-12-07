@@ -25,7 +25,7 @@ public interface IBinService {
     void setTCPServer(ITCPServer tcpServer);
     boolean updateBin(UpdateBinDto updatedBinDto);
     void handleIoTData(int deviceId, String data);
-    void deleteBinById(long binId);
+    boolean deleteBinById(long binId);
     List<BinDto> findAllBins();
     Optional<BinDto> findBinById(Long id);
     String getIoTData(int binId, int deviceId, String payload);
