@@ -7,10 +7,8 @@ import java.util.List;
 
 public interface ITCPServer {
 
-    public String setFillThreshold(double newThreshold);
+    public boolean setIoTData(int deviceId, String payload);
     public String getDataById(int deviceId, String payload);
     void startServer();
     public List<ServerSocketHandler> getIoTDevices();
-    void addDeviceStatusListener(DeviceStatusListener listener);
-
 }

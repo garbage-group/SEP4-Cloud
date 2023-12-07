@@ -16,7 +16,6 @@ import java.util.Optional;
 
 @Service
 public interface IBinService {
-
     Optional<Humidity> getCurrentHumidityByBinId(Long binId);
     boolean saveHumidityByBinId(int binId, double humidity, LocalDateTime dateTime);      // Save to DB
     Optional<Temperature> getCurrentTemperatureByBinId(Long binId);
@@ -24,7 +23,6 @@ public interface IBinService {
     boolean saveFillLevelByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     boolean saveTemperatureByBinId(int binId, double fillLevel, LocalDateTime dateTime);     // Save to DB
     void setTCPServer(ITCPServer tcpServer);
-
     boolean updateBin(UpdateBinDto updatedBinDto);
     void handleIoTData(int deviceId, String data);
     void deleteBinById(long binId);
@@ -33,8 +31,9 @@ public interface IBinService {
     String getIoTData(int binId, int deviceId, String payload);
     Bin create(CreateBinDTO binDTO);
     int getAvailableDevice();
-
     List<NotificationBinDto> getBinsWithThresholdLessThanFillLevel();
-
     boolean getDeviceStatusByBinId(Long binId);
+    void startPeriodicLevelRequest(int intervalSeconds);
+    void stopPeriodicLevelRequest();
+    void requestCurrentLevels();
 }

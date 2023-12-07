@@ -97,7 +97,7 @@ public class BinController {
         }
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<List<BinDto>> getAllBins() {
         try {
             List<BinDto> bins = binService.findAllBins();
@@ -120,7 +120,7 @@ public class BinController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteBinById(@PathVariable Long id) {
         try {
             binService.deleteBinById(id);
@@ -171,6 +171,18 @@ public class BinController {
             logger.error("Error occurred while fetching device's status on bin with ID: " + binId, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/startPeriodicRequest/{intervalSeconds}")
+    public ResponseEntity<String> startPeriodicRequest(@PathVariable int intervalSeconds) {
+        binService.startPeriodicLevelRequest(intervalSeconds);
+        return ResponseEntity.ok("Periodic level request started with interval: " + intervalSeconds + " seconds");
+    }
+
+    @PostMapping("/stopPeriodicRequest")
+    public ResponseEntity<String> stopPeriodicRequest() {
+        binService.stopPeriodicLevelRequest();
+        return ResponseEntity.ok("Periodic level request stopped");
     }
 
 }

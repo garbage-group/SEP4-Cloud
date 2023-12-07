@@ -4,15 +4,14 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Random;
 import java.util.Scanner;
 
 @Component
 public class Client {
     private OutputStream outToServer;
     private InputStream inFromServer;
-    private InetAddress address;
+    private final Random random = new Random();
 
     public void startClient() {
         try{
@@ -26,22 +25,9 @@ public class Client {
             t.setDaemon(true);
             t.start();
 
-            Scanner scanner = new Scanner(System.in);
-
-            while (true) {
-                String scanned = scanner.nextLine();
-                outToServer.write(scanned.getBytes());
-                outToServer.flush();
-
-                if (scanned.equalsIgnoreCase("exit")) {
-                    socket.close();
-                    System.out.println("Client exits");
-                    break;
-                }
-            }
-
-        } catch(IOException e){
-            e.printStackTrace();
+        } catch (IOException e){
+            System.out.println("IOException was thrown by the Client Socket");
+            //e.printStackTrace();
         }
     }
 
@@ -57,7 +43,8 @@ public class Client {
                 if (result.equals("getHumidity")) {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
-                } else   if (result.startsWith("setFillThreshold")) {
+                }
+                else if (result.startsWith("setFillThreshold")) {
                     outToServer.write("Threshold set".getBytes());
                     outToServer.flush();
                 }
@@ -70,11 +57,18 @@ public class Client {
                     outToServer.flush();
                 }
                 else if (result.equals("getCurrentLevel")) {
-                    outToServer.write("level:67.0".getBytes());
+                    float value = random.nextFloat() * 100;
+                    // Round to 1 decimal place
+                    value = Math.round(value * 10) / 10f;
+                    outToServer.write(("level:" + value).getBytes());
                     outToServer.flush();
                 }
                 else if (result.equals("getStatus")) {
                     outToServer.write("statu:OK".getBytes());
+                    outToServer.flush();
+                }
+                else if (result.equals("calibrateDevice")) {
+                    outToServer.write("OK".getBytes());
                     outToServer.flush();
                 }
             }
@@ -84,5 +78,4 @@ public class Client {
             }
         }
     }
-
 }

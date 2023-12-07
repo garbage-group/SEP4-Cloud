@@ -2,9 +2,6 @@ package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.*;
-import garbagegroup.cloud.model.Bin;
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
@@ -15,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
-    private DTOConverter dtoConverter;
+    private ScheduledExecutorService executorService;
 
 
     @Autowired
@@ -275,13 +275,48 @@ public class BinService implements IBinService {
     @Override
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
-        List<BinDto> binDtos = new ArrayList<BinDto>();
-        for (Bin bin: bins) {
+        List<BinDto> binDtos = new ArrayList<>();
+        for (Bin bin : bins) {
             BinDto dto = DTOConverter.convertToBinDto(bin);
+
+            // Set status
+//            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
+//            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
+
+            // Set pickup date
+            setPickupDate(bin);
+
+            // Set last emptied time
+            setLastEmptiedTime(bin);
 
             binDtos.add(dto);
         }
         return binDtos;
+    }
+
+    public void setPickupDate(Bin bin) {
+        //check the fill level of bin from the database and if it exceed the threshold, set the pickup date to tomorrow
+        Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
+        double currentFillLevel = lastLevelWithTimestamp.getValue();
+        if (currentFillLevel > bin.getFillThreshold()) {
+            LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
+            //if the fill level time is after 14:00, set the pickup date to tomorrow otherwise set it after two hours
+            if (timestamp.getHour() >= 14) {
+                bin.setPickUpTime(timestamp.plusDays(1));
+            } else {
+                bin.setPickUpTime(timestamp.plusHours(3));
+            }
+            binRepository.save(bin);
+        }
+    }
+
+    public void setLastEmptiedTime(Bin bin) {
+        //check the last pickup date of bin and set the last emptied date to the same date
+        LocalDateTime lastPickupTime = binRepository.findLastPickupTime(bin.getId());
+        if (lastPickupTime != null) {
+            bin.setEmptiedLast(lastPickupTime);
+            binRepository.save(bin);
+        }
     }
 
     @Override
@@ -289,7 +324,7 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = dtoConverter.convertToBinDto(bin);
+            BinDto binDto = DTOConverter.convertToBinDto(bin);
             return Optional.of(binDto);
         } else {
             return Optional.empty();
@@ -306,7 +341,7 @@ public class BinService implements IBinService {
      */
     @Override
     public Bin create(CreateBinDTO binDTO) {
-        Bin createdBin = null;
+        Bin createdBin;
         Bin newBin = new Bin(binDTO.getLongitude(), binDTO.getLatitude(), binDTO.getCapacity(), binDTO.getFillThreshold(), null, null);
         int deviceId = getAvailableDevice();
         if (deviceId == 0) {
@@ -323,6 +358,10 @@ public class BinService implements IBinService {
             newBin.setDeviceId(deviceId);
             createdBin = binRepository.save(newBin);
             createdBin.setDeviceId(deviceId);
+            if (!tcpServer.setIoTData(deviceId, "calibrateDevice")) {
+                // Try to calibrate the device and if it returns false, something went wrong - but we don't even throw exception because it is not so important
+                System.out.println("The device could not be calibrated");
+            }
         }
         return createdBin;
     }
@@ -336,14 +375,14 @@ public class BinService implements IBinService {
     public int getAvailableDevice() {
         List<ServerSocketHandler> IoTDevices = tcpServer.getIoTDevices();   // Get all online devices
         if (IoTDevices == null) return 0;
-        if (IoTDevices.size() == 0) return 0;
+        if (IoTDevices.isEmpty()) return 0;
         else {
             List<Bin> bins = binRepository.findAll();   // Fetch all bins
             for (Bin bin : bins) {      // Check if there is an online device that has not been assigned to a bin
                 // Remove a device from list IoTDevices if the device belongs to a bin already
                 IoTDevices.removeIf(device -> bin.getDeviceId() == device.getDeviceId());
             }
-            if (IoTDevices.size() >= 1) { // If there is a device left, return the device ID of the first device
+            if (!IoTDevices.isEmpty()) { // If there is a device left, return the device ID of the first device
                 return IoTDevices.get(0).getDeviceId();
             } else return 0;  // Else return 0
         }
@@ -458,11 +497,9 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(binId);
         if (binOptional.isPresent()) {
             List<Level> allLevels = binOptional.get().getFillLevels();
-            if (allLevels != null) {
+            if (!allLevels.isEmpty()) {
                 allLevels.sort(Comparator.comparing(Level::getDateTime).reversed());
-                if (!allLevels.isEmpty()) {
-                    return allLevels.get(0); // Return the level object with the latest timestamp
-                }
+                return allLevels.get(0); // Return the level object with the latest timestamp
             }
         }
         return new Level(); // Return an empty Level object if not found
@@ -543,6 +580,57 @@ public class BinService implements IBinService {
                 latestLevel.getValue(),
                 latestLevel.getDateTime()
         );
+    }
+
+    /**
+     * Starts a service that requests current level of connected devices
+     * @param intervalSeconds interval in which the data is requested in seconds
+     */
+    public void startPeriodicLevelRequest(int intervalSeconds) {
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.scheduleAtFixedRate(this::requestCurrentLevels, 0, intervalSeconds, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Stops a service that requests current level of connected devices
+     */
+    public void stopPeriodicLevelRequest() {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+    }
+
+    /**
+     * Iterates through a list of connected devices and requests the current fill levels
+     * based on a matching binID and saves them to database.
+     */
+    public void requestCurrentLevels() {
+        try {
+            List<BinDto> bins = findAllBins();
+            List<ServerSocketHandler> devices = tcpServer.getIoTDevices();
+
+            for (ServerSocketHandler device : devices) {
+                System.out.println("Requesting current level from device " + device.getDeviceId());
+
+                // Find the bin that matches the device ID
+                BinDto matchingBin = bins.stream()
+                        .filter(bin -> bin.getDeviceId() == device.getDeviceId())
+                        .findFirst()
+                        .orElse(null);
+
+                if (matchingBin != null) {
+                    String response = device.sendMessage("getCurrentLevel");
+                    handleIoTData(matchingBin.getId().intValue(), response);
+                } else {
+                    System.out.println("No matching bin found for device ID " + device.getDeviceId());
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error while trying periodical level retrieval of connected devices.");
+        }
     }
 }
 
