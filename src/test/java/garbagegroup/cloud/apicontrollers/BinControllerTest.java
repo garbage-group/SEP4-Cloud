@@ -10,6 +10,7 @@ import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.model.Temperature;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
+import io.swagger.models.Response;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
@@ -29,6 +30,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -383,6 +385,56 @@ public class BinControllerTest {
         //Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(2, result.getBody().size());
+    }
+
+    @Test
+    public void getDeviceStatusByBinId_BinServiceThrowsNoSuchElementException_ReturnsNotFoundStatus() {
+        //Mock
+        when(binService.getDeviceStatusByBinId(any(Long.class))).thenThrow(NoSuchElementException.class);
+
+        //Act
+        ResponseEntity<String> result = binController.getDeviceStatusByBinId(1L);
+
+        //Assert
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void getDeviceStatusByBinId_BinServiceThrowsOtherException_ReturnsNotFoundStatus() {
+        //Mock
+        when(binService.getDeviceStatusByBinId(any(Long.class))).thenThrow(IllegalArgumentException.class);
+
+        //Act
+        ResponseEntity<String> result = binController.getDeviceStatusByBinId(1L);
+
+        //Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+    @Test
+    public void getDeviceStatusByBinId_BinServiceReturnsFalse_ReturnsNotFoundStatusAndWarningMessage() {
+        //Mock
+        when(binService.getDeviceStatusByBinId(any(Long.class))).thenReturn(Boolean.FALSE);
+
+        //Act
+        ResponseEntity<String> result = binController.getDeviceStatusByBinId(1L);
+
+        //Assert
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertTrue(result.getBody().contains("attention"));
+    }
+
+    @Test
+    public void getDeviceStatusByBinId_SuccessfulRun_ReturnsOkStatusCodeAndPositiveMessage() {
+        //Mock
+        when(binService.getDeviceStatusByBinId(any(Long.class))).thenReturn(Boolean.TRUE);
+
+        //Act
+        ResponseEntity<String> result = binController.getDeviceStatusByBinId(1L);
+
+        //Assert
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertTrue(result.getBody().contains("online"));
     }
 
 
