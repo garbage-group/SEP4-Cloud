@@ -285,8 +285,8 @@ public class BinService implements IBinService {
             BinDto dto = DTOConverter.convertToBinDto(bin);
 
             // Set status
-            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
-            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
+//            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
+//            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
 
             // Set pickup date
             setPickupDate(bin);
@@ -574,9 +574,8 @@ public class BinService implements IBinService {
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
             if (response.equals("statu:OK")) return true;
             else if (response.equals("statu:NOT OK")) return false;
-           // else throw new NoSuchElementException("The device on bin " + binId + " is offline");
-        }//else throw new NoSuchElementException("Bin with id " + binId + " not found");
-        return false;
+            else throw new NoSuchElementException("The device on bin " + binId + " is offline");
+        }else throw new NoSuchElementException("Bin with id " + binId + " not found");
     }
 
     public NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
@@ -638,6 +637,8 @@ public class BinService implements IBinService {
             System.out.println("Error while trying periodical level retrieval of connected devices.");
         }
     }
+
+
 
 }
 
