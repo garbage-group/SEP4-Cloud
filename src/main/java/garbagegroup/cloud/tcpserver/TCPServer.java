@@ -1,13 +1,8 @@
 package garbagegroup.cloud.tcpserver;
 
-import garbagegroup.cloud.DTOs.UpdateBinDto;
-import garbagegroup.cloud.service.serviceImplementation.BinService;
-import garbagegroup.cloud.service.serviceInterface.IBinService;
-import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -27,7 +22,6 @@ public class TCPServer implements ITCPServer, Runnable {
             //e.printStackTrace();
         }
     }
-
 
     @Override
     public void run() {
@@ -83,9 +77,7 @@ public class TCPServer implements ITCPServer, Runnable {
         String response = "";
         for (ServerSocketHandler ssh : IoTDevices) {
             if (ssh.getDeviceId() == deviceId) {
-                if (payload.equals("calibrateDevice")) {
-                    response = ssh.sendMessage(payload);
-                }
+                response = ssh.sendMessage(payload);
             }
         }
         return response.equals("OK");
@@ -101,6 +93,7 @@ public class TCPServer implements ITCPServer, Runnable {
 
     /**
      * Sets IoT Devices
+     *
      * @param IoTDevices
      */
     public void setIoTDevices(List<ServerSocketHandler> IoTDevices) {
@@ -116,5 +109,4 @@ public class TCPServer implements ITCPServer, Runnable {
         String response = socketHandler.sendMessage("getSerialNumber");     // This will return the serial number of the IoT device (if ok), which we need to find out which bin it is attached to
         return Integer.parseInt(response);
     }
-
 }
