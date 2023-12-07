@@ -196,6 +196,7 @@ public class UserControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
+
     @Test
     public void testUpdateUser_Success() {
         // Mock data
@@ -205,17 +206,8 @@ public class UserControllerTest {
         updateUserDto.setPassword("newPassword");
         updateUserDto.setRegion("Updated Region");
 
-        User user = new User();
-        user.setUsername(username);
-
-        // Stubbing the userService methods
-        when(userService.fetchUserByUsername(username)).thenReturn(user);
-
         // Perform the update
         ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
-
-        // Verify interactions and assertions
-        verify(userService, times(1)).fetchUserByUsername(username);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("User updated successfully", response.getBody());
@@ -228,13 +220,10 @@ public class UserControllerTest {
         UpdateUserDto updateUserDto = new UpdateUserDto();
 
         // Stubbing the userService methods to simulate an exception
-        when(userService.fetchUserByUsername(username)).thenThrow(new RuntimeException());
+        when(userService.updateUser(updateUserDto)).thenThrow(new RuntimeException());
 
         // Perform the update
         ResponseEntity<String> response = userController.updateUser(username, updateUserDto);
-
-        // Verify interactions and assertions
-        verify(userService, times(1)).fetchUserByUsername(username);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }

@@ -14,5 +14,4 @@ public interface IUserService {
     List<UserDto> fetchAllUsers();
     boolean updateUser(UpdateUserDto user);
     void deleteByUsername(String username);
-
 }

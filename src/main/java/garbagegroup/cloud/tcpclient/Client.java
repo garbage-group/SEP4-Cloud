@@ -4,8 +4,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -13,7 +11,6 @@ import java.util.Scanner;
 public class Client {
     private OutputStream outToServer;
     private InputStream inFromServer;
-    private InetAddress address;
     private final Random random = new Random();
 
     public void startClient() {
@@ -28,22 +25,9 @@ public class Client {
             t.setDaemon(true);
             t.start();
 
-            Scanner scanner = new Scanner(System.in);
-
-            while (true) {
-                String scanned = scanner.nextLine();
-                outToServer.write(scanned.getBytes());
-                outToServer.flush();
-
-                if (scanned.equalsIgnoreCase("exit")) {
-                    socket.close();
-                    System.out.println("Client exits");
-                    break;
-                }
-            }
-
-        } catch(IOException e){
-            e.printStackTrace();
+        } catch (IOException e){
+            System.out.println("IOException was thrown by the Client Socket");
+            //e.printStackTrace();
         }
     }
 
@@ -59,7 +43,8 @@ public class Client {
                 if (result.equals("getHumidity")) {
                     outToServer.write(("humid:25.0").getBytes());
                     outToServer.flush();
-                } else   if (result.startsWith("setFillThreshold")) {
+                }
+                else if (result.startsWith("setFillThreshold")) {
                     outToServer.write("Threshold set".getBytes());
                     outToServer.flush();
                 }
@@ -93,5 +78,4 @@ public class Client {
             }
         }
     }
-
 }

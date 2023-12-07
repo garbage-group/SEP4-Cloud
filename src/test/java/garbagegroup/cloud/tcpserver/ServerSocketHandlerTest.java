@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.Socket;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class ServerSocketHandlerTest {
@@ -48,13 +49,16 @@ class ServerSocketHandlerTest {
     }
 
     @Test
-    void testSendMessage_OutputStreamThrowsIOException() {
+    void testSendMessage_OutputStreamThrowsIOException() throws IOException {
         // Arrange
-        String message = "Test message";
+        ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
+        ByteArrayInputStream inputStream = mock(ByteArrayInputStream.class);
 
-        // Mock an IOException when getting output stream
+        doThrow(IOException.class).when(outputStream).write(any(byte[].class));
+
         try {
-            when(mockedSocket.getOutputStream()).thenThrow(new IOException());
+            when(mockedSocket.getOutputStream()).thenReturn(outputStream);
+            when(mockedSocket.getInputStream()).thenReturn(inputStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,7 +67,7 @@ class ServerSocketHandlerTest {
         serverSocketHandler.setDeviceId(123);
 
         // Act
-        String response = serverSocketHandler.sendMessage(message);
+        String response = serverSocketHandler.sendMessage("Message");
 
         // Assert
         assertEquals("Client with an ID: 123 disconnected", response);
@@ -92,7 +96,6 @@ class ServerSocketHandlerTest {
     }
 
 
-
     @Test
     void testGetDeviceId_Returns1() {
         // Arrange
@@ -104,6 +107,18 @@ class ServerSocketHandlerTest {
 
         // Assert
         assertEquals(123, response);
+    }
+
+    @Test
+    void testConstructor_throwsIOException_CaughtInConstructor() throws IOException {
+        // Arrange
+        Socket mockedSocket = mock(Socket.class);
+
+        when(mockedSocket.getOutputStream()).thenThrow(new IOException());
+        when(mockedSocket.getInputStream()).thenThrow(new IOException());
+
+        // Act
+        new ServerSocketHandler(mockedSocket);
     }
 }
 
