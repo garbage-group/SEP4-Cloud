@@ -7,6 +7,7 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -17,13 +18,13 @@ public class TCPServer implements ITCPServer, Runnable {
     ServerSocket serverSocket;
     ServerSocketHandler socketHandler;
     List<ServerSocketHandler> IoTDevices = new ArrayList<>();
-    private IBinService binService;
 
     public TCPServer() {
         try {
             serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Problems connecting to the server");
+            //e.printStackTrace();
         }
     }
 
@@ -42,7 +43,6 @@ public class TCPServer implements ITCPServer, Runnable {
                 int serialNumber = getIoTSerialNumber();
                 socketHandler.setDeviceId(serialNumber);    // Setting the actual serial number
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
-
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
                 //e.printStackTrace();
@@ -99,6 +99,13 @@ public class TCPServer implements ITCPServer, Runnable {
         return IoTDevices;
     }
 
+    /**
+     * Sets IoT Devices
+     * @param IoTDevices
+     */
+    public void setIoTDevices(List<ServerSocketHandler> IoTDevices) {
+        this.IoTDevices = IoTDevices;
+    }
 
     /**
      * Requests a serial number from the IoT device
