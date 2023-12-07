@@ -63,9 +63,10 @@ public class UserController {
             logger.error("Error while deleting: User with username '" + username + "' not found.");
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (IllegalArgumentException e) {
+            logger.error("Error while deleting " + username + ", you can only delete Garbage Collectors.");
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            logger.error("Error occurred while deleting bin with ID: " + username, e);
+            logger.error("Error occurred while deleting user: " + username, e);
             return new ResponseEntity<>("Error occurred while deleting user with username: " + username, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -73,13 +74,10 @@ public class UserController {
     @PatchMapping("/{username}")
     public ResponseEntity<String> updateUser(@PathVariable("username") String username, @RequestBody UpdateUserDto userDto) {
         try {
-            User user = userService.fetchUserByUsername(username);
-            user.setFullname(userDto.getFullname());
-            user.setPassword(userDto.getPassword());
-            user.setRegion(userDto.getRegion());
             userService.updateUser(userDto);
             return ResponseEntity.ok("User updated successfully");
         } catch (Exception e) {
+            logger.error("Error while updating user: " + username, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

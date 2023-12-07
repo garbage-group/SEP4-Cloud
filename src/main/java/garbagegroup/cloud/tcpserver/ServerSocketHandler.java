@@ -2,19 +2,13 @@ package garbagegroup.cloud.tcpserver;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ServerSocketHandler{
   private int deviceId;
-  private Socket socket;
   private InputStream inFromClient;
   private OutputStream outToClient;
 
-
-
   public ServerSocketHandler(Socket socket) {
-    this.socket = socket;
     try {
       outToClient = socket.getOutputStream();
       inFromClient = socket.getInputStream();
@@ -22,7 +16,6 @@ public class ServerSocketHandler{
       System.out.println("Thrown IOException when initializing ServerSocketHandler");
     }
   }
-
 
   public String sendMessage(String message) {
     try {
@@ -53,6 +46,4 @@ public class ServerSocketHandler{
   public void setDeviceId(int deviceId) {
     this.deviceId = deviceId;
   }
-
-
 }

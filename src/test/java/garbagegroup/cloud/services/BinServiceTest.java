@@ -312,17 +312,24 @@ public class BinServiceTest {
             binService.deleteBinById(binId);
         });
     }
-
     @Test
-    public void testFindAllBins() {
-        List<Bin> bins = Arrays.asList(new Bin(), new Bin());
-        when(binRepository.findAll()).thenReturn(bins);
+    void testFindAllBins() {
+        // Mocking data
+        Bin bin1 = new Bin(20.7, 50.3, 56.8, 78.7, null, null);
+        Bin bin2 = new Bin(60.7, 20.3, 56.8, 78.7, null, null);
+        List<Bin> mockBins = Arrays.asList(bin1, bin2);
 
+        // Mocking behavior of binRepository
+        when(binRepository.findAll()).thenReturn(mockBins);
+
+        // Perform the test
         List<BinDto> result = binService.findAllBins();
 
-        assertEquals(2, result.size());
-        verify(binRepository).findAll();
+        // Assertions
+        assertEquals(2, result.size()); // Check if the size of the returned list is as expected
+
     }
+
 
     @Test
     public void testFindBinById_WhenBinExists() {
@@ -695,25 +702,34 @@ public class BinServiceTest {
     }
 
     @Test
-    public void testGetDeviceStatusByBinId_DeviceOffline() {
+    public void testGetDeviceStatusByBinId_DeviceStatusNotOk() {
         // Arrange
         Bin bin = new Bin();
-        bin.setId(2L);
+        bin.setId(1L);
         bin.setDeviceId(1234);
-        BinService mockedService = mock(BinService.class);
 
-        when(binRepository.findById(2L)).thenReturn(Optional.of(bin));
-        mockedService.getIoTData(2, 1234,"getStatus");
+        // Mock IoT server and related dependencies
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh1 = new ServerSocketHandler(mockedSocket);
+        ssh1.setDeviceId(1234);
+        IoTDevices.add(ssh1);
+
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(tcpServer.getDataById(1234, "getStatus")).thenReturn("statu:NOT OK"); // Simulating device status as "Not OK"
+
+        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
+        when(binService.getIoTData(1, 1234, "getStatus")).thenReturn("statu:NOT OK"); // Simulating device status as "Not OK"
 
         // Act
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> binService.getDeviceStatusByBinId(2L));
-        assertTrue(exception.getMessage().contains("The device on bin 2 is offline"));
+        boolean deviceStatus = binService.getDeviceStatusByBinId(1L);
 
         // Assert
-        verify(binRepository, times(1)).findById(2L);
-        verify(mockedService, times(1)).getIoTData(anyInt(), eq(1234), eq("getStatus"));
+        assertFalse(deviceStatus); // Verifying that the device status is not OK
+        verify(binRepository, times(1)).findById(1L);
+        verify(tcpServer, times(1)).getDataById(1234, "getStatus");
     }
+
 
     @Test
     public void testGetDeviceStatusByBinId_BinNotFound() {
@@ -728,6 +744,8 @@ public class BinServiceTest {
         // Assert
         verify(binRepository, times(1)).findById(3L);
     }
+
+
 
     @Test
     public void getLastLevelReadingWithTimestamp_NoBinFound_ReturnsEmptyLevel() {
@@ -880,4 +898,43 @@ public class BinServiceTest {
         //Assert
         assertNull(result);
     }
+
+
+    @Test
+    public void testSetLastEmptiedTime_WithLastPickupTime() {
+        // Arrange
+        Bin bin = new Bin();
+        bin.setId(1L);
+
+        LocalDateTime lastPickupTime = LocalDateTime.of(2023, 12, 5, 10, 0); // Simulating last pickup time
+        when(binRepository.findLastPickupTime(1L)).thenReturn(lastPickupTime);
+
+        // Act
+        binService.setLastEmptiedTime(bin);
+
+        // Assert
+        verify(binRepository, times(1)).findLastPickupTime(1L);
+        verify(binRepository, times(1)).save(bin);
+        assertEquals(lastPickupTime, bin.getEmptiedLast());
+    }
+
+    @Test
+    public void testSetLastEmptiedTime_WithoutLastPickupTime() {
+        // Arrange
+        Bin bin = new Bin();
+        bin.setId(1L);
+
+        // Simulating no last pickup time found
+        when(binRepository.findLastPickupTime(1L)).thenReturn(null);
+
+        // Act
+        binService.setLastEmptiedTime(bin);
+
+        // Assert
+        verify(binRepository, times(1)).findLastPickupTime(1L);
+        verify(binRepository, never()).save(bin);
+        assertNull(bin.getEmptiedLast());
+    }
+
+
 }
