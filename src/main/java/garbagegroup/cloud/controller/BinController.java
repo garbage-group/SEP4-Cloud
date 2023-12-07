@@ -97,7 +97,7 @@ public class BinController {
         }
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<List<BinDto>> getAllBins() {
         try {
             List<BinDto> bins = binService.findAllBins();
@@ -120,7 +120,7 @@ public class BinController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteBinById(@PathVariable Long id) {
         try {
             binService.deleteBinById(id);

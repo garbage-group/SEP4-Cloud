@@ -2,14 +2,10 @@ package garbagegroup.cloud.service.serviceImplementation;
 
 import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.*;
-import garbagegroup.cloud.model.Bin;
-import garbagegroup.cloud.model.Humidity;
-import garbagegroup.cloud.model.Level;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
 import garbagegroup.cloud.tcpserver.ITCPServer;
 import garbagegroup.cloud.tcpserver.ServerSocketHandler;
-import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +22,6 @@ import java.util.stream.Collectors;
 public class BinService implements IBinService {
     ITCPServer tcpServer;
     private IBinRepository binRepository;
-    private DTOConverter dtoConverter;
     private ScheduledExecutorService executorService;
 
 
@@ -280,8 +275,8 @@ public class BinService implements IBinService {
     @Override
     public List<BinDto> findAllBins() {
         List<Bin> bins = binRepository.findAll();
-        List<BinDto> binDtos = new ArrayList<BinDto>();
-        for (Bin bin: bins) {
+        List<BinDto> binDtos = new ArrayList<>();
+        for (Bin bin : bins) {
             BinDto dto = DTOConverter.convertToBinDto(bin);
 
             binDtos.add(dto);
@@ -294,7 +289,7 @@ public class BinService implements IBinService {
         Optional<Bin> binOptional = binRepository.findById(id);
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
-            BinDto binDto = dtoConverter.convertToBinDto(bin);
+            BinDto binDto = DTOConverter.convertToBinDto(bin);
             return Optional.of(binDto);
         } else {
             return Optional.empty();
@@ -311,7 +306,7 @@ public class BinService implements IBinService {
      */
     @Override
     public Bin create(CreateBinDTO binDTO) {
-        Bin createdBin = null;
+        Bin createdBin;
         Bin newBin = new Bin(binDTO.getLongitude(), binDTO.getLatitude(), binDTO.getCapacity(), binDTO.getFillThreshold(), null, null);
         int deviceId = getAvailableDevice();
         if (deviceId == 0) {
@@ -345,14 +340,14 @@ public class BinService implements IBinService {
     public int getAvailableDevice() {
         List<ServerSocketHandler> IoTDevices = tcpServer.getIoTDevices();   // Get all online devices
         if (IoTDevices == null) return 0;
-        if (IoTDevices.size() == 0) return 0;
+        if (IoTDevices.isEmpty()) return 0;
         else {
             List<Bin> bins = binRepository.findAll();   // Fetch all bins
             for (Bin bin : bins) {      // Check if there is an online device that has not been assigned to a bin
                 // Remove a device from list IoTDevices if the device belongs to a bin already
                 IoTDevices.removeIf(device -> bin.getDeviceId() == device.getDeviceId());
             }
-            if (IoTDevices.size() >= 1) { // If there is a device left, return the device ID of the first device
+            if (!IoTDevices.isEmpty()) { // If there is a device left, return the device ID of the first device
                 return IoTDevices.get(0).getDeviceId();
             } else return 0;  // Else return 0
         }
@@ -602,7 +597,6 @@ public class BinService implements IBinService {
             System.out.println("Error while trying periodical level retrieval of connected devices.");
         }
     }
-
 }
 
 
