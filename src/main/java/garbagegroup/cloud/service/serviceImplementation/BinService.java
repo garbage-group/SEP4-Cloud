@@ -4,17 +4,14 @@ import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.*;
 import garbagegroup.cloud.repository.IBinRepository;
 import garbagegroup.cloud.service.serviceInterface.IBinService;
-import garbagegroup.cloud.tcpserver.ITCPServer;
-import garbagegroup.cloud.tcpserver.ServerSocketHandler;
+import garbagegroup.cloud.tcpserver.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -24,18 +21,15 @@ public class BinService implements IBinService {
     private IBinRepository binRepository;
     private ScheduledExecutorService executorService;
 
-
     @Autowired
     public BinService(IBinRepository binRepository, ITCPServer tcpServer) {
         this.binRepository = binRepository;
-
         // When creating the BinService, we also start the TCP Server to communicate with the IoT device
         tcpServer.startServer();
         this.setTCPServer(tcpServer);
     }
 
-    public BinService() {
-    }
+    public BinService() {}
 
     /**
      * Fetches SensorData from the IoT device
@@ -281,9 +275,8 @@ public class BinService implements IBinService {
             BinDto dto = DTOConverter.convertToBinDto(bin);
 
             // Set status
-//            boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
-//            dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
-
+            //boolean deviceStatus = getDeviceStatusByBinId(bin.getId());
+            //dto.setStatus(deviceStatus ? "ACTIVE" : "OFFLINE");
             // Set pickup date
             setPickupDate(bin);
 
@@ -532,7 +525,6 @@ public class BinService implements IBinService {
      * @param bin
      * @return NotificationBinDto
      */
-
     public NotificationBinDto verifyBinsFillLevel(Bin bin) {
         boolean isActiveDevice = hasActiveDevice(bin.getDeviceId());
 
@@ -566,7 +558,6 @@ public class BinService implements IBinService {
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
             // Send fill threshold data to the IoT device
-
             String response = getIoTData(binId.intValue(), bin.getDeviceId(), "getStatus");
             if (response.equals("statu:OK")) return true;
             else if (response.equals("statu:NOT OK")) return false;

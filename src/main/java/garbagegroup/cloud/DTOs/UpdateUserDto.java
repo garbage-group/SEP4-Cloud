@@ -4,7 +4,6 @@ public class UpdateUserDto {
     private String username;
     private String password;
     private String fullname;
-
     private String region;
 
     public UpdateUserDto(String username, String password, String fullname, String region) {
@@ -14,9 +13,7 @@ public class UpdateUserDto {
         this.region = region;
     }
 
-    public UpdateUserDto() {
-
-    }
+    public UpdateUserDto() {}
 
     public String getUsername() {
         return username;

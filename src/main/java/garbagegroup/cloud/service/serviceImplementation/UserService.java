@@ -1,20 +1,19 @@
 package garbagegroup.cloud.service.serviceImplementation;
 
-import garbagegroup.cloud.DTOs.UpdateUserDto;
-import garbagegroup.cloud.DTOs.CreateUserDto;
-import garbagegroup.cloud.DTOs.DTOConverter;
-import garbagegroup.cloud.DTOs.UserDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.jwt.JwtService;
 import garbagegroup.cloud.jwt.auth.AuthenticationResponse;
 import garbagegroup.cloud.model.User;
 import garbagegroup.cloud.repository.IUserRepository;
 import garbagegroup.cloud.service.serviceInterface.IUserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,7 @@ import java.util.List;
 @Service
 public class UserService implements IUserService {
     private final JwtService jwtService;
-    private IUserRepository userRepository;
+    private final IUserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
@@ -34,7 +33,6 @@ public class UserService implements IUserService {
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
     }
-
 
     /**
      * Fetches user details from the repository based on the provided username.
@@ -84,7 +82,6 @@ public class UserService implements IUserService {
                 userToUpdate.setPassword(this.passwordEncoder.encode(user.getPassword()));
                 userToUpdate.setFullname(user.getFullname());
                 userToUpdate.setRegion(user.getRegion());
-
                 // Save the updated user to the database
                 userRepository.save(userToUpdate);
                 return true;
@@ -115,7 +112,6 @@ public class UserService implements IUserService {
         return userDtos;
     }
 
-
     /**
      * Authenticates a user based on the provided UserDto credentials.
      *
@@ -124,7 +120,6 @@ public class UserService implements IUserService {
      * @throws RuntimeException      If the user is not found after authentication.
      */
     public AuthenticationResponse authenticate(UserDto request) {
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),

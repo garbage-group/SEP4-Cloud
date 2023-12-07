@@ -1,7 +1,7 @@
 package garbagegroup.cloud.jwt;
 
-
 import garbagegroup.cloud.repository.IUserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
-
     @Autowired
     private IUserRepository IUserRepository;
 

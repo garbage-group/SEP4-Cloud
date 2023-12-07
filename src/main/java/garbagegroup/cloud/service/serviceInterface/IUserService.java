@@ -1,12 +1,9 @@
 package garbagegroup.cloud.service.serviceInterface;
 
-import garbagegroup.cloud.DTOs.UpdateUserDto;
-import garbagegroup.cloud.DTOs.CreateUserDto;
-import garbagegroup.cloud.DTOs.UserDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.User;
 
 import java.util.List;
-
 
 public interface IUserService {
     User fetchUserByUsername(String username);

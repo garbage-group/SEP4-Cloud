@@ -1,12 +1,8 @@
 package garbagegroup.cloud.DTOs;
 
-import garbagegroup.cloud.model.Level;
-
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class NotificationBinDto {
-
     private Double fillThreshold;
     private Long binId;
     private Double levelValue;

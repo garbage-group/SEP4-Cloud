@@ -2,7 +2,6 @@ package garbagegroup.cloud.DTOs;
 
 
 public class UserDto {
-
     private String username;
     private String password;
     private String fullname;
@@ -17,9 +16,7 @@ public class UserDto {
         this.region = region;
     }
 
-    public UserDto() {
-
-    }
+    public UserDto() {}
 
     public String getRegion() {
         return region;

@@ -19,7 +19,6 @@ public class TCPServer implements ITCPServer, Runnable {
             serverSocket = new ServerSocket(2910);
         } catch (IOException e) {
             System.out.println("Problems connecting to the server");
-            //e.printStackTrace();
         }
     }
 
@@ -39,7 +38,6 @@ public class TCPServer implements ITCPServer, Runnable {
                 System.out.println("Client connected. Giving it ID: " + socketHandler.getDeviceId());
             } catch (IOException e) {
                 System.out.println("Client with ID " + socketHandler.getDeviceId() + " disconnected");
-                //e.printStackTrace();
             }
         }
     }
