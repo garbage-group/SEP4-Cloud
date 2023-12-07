@@ -385,4 +385,5 @@ public class BinControllerTest {
         assertEquals(2, result.getBody().size());
     }
 
+
 }

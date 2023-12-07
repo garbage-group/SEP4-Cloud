@@ -23,10 +23,11 @@ public class BinDto {
     private List<Humidity> humidity;
     private List<Level> fillLevels;
     private List<Temperature> temperatures;
+    private String status;
 
     public BinDto(){
     }
-    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels, List<Temperature> temperatures) {
+    public BinDto(Long id, Double longitude, Double latitude, Double capacity, LocalDateTime emptiedLast, LocalDateTime pickUpTime, Double fillThreshold, int deviceId, List<Humidity> humidity,List<Level> fillLevels, List<Temperature> temperatures, String status) {
         this.id = id;
         this.longitude = longitude;
         this.latitude = latitude;
@@ -38,8 +39,16 @@ public class BinDto {
         this.humidity = humidity;
         this.fillLevels = fillLevels;
         this.temperatures = temperatures;
+        this.status = status;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
     public Double getLongitude() {
         return longitude;
     }
