@@ -71,7 +71,7 @@ public class Client {
                     outToServer.write("OK".getBytes());
                     outToServer.flush();
                 } else if (result.equals("activateBuzzer")) {
-                    outToServer.write("actbu:OK".getBytes());
+                    outToServer.write("OK".getBytes());
                     outToServer.flush();
                 }
             }

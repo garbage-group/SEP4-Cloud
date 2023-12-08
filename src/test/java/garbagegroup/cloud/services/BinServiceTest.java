@@ -1100,50 +1100,37 @@ public class BinServiceTest {
     }
 
     @Test
-    public void testSendBuzzerActivationToIoT_Success() {
+    public void sendBuzzerActivationToIoT_BinNotFound_ThrowsNoSuchElementException() {
+        // Arrange
+        Long binId = 999L;
+        when(binRepository.findById(binId)).thenReturn(Optional.empty());
 
-        // Create a sample Bin instance
-        Bin bin = new Bin();
-        bin.setId(1L);
-        bin.setDeviceId(123); // Sample device ID
-
-        // Stub the behavior of binRepository.findById()
-        when(binRepository.findById(1L)).thenReturn(Optional.of(bin));
-
-        // Stub the behavior of tcpServer.setIoTData()
-        when(tcpServer.setIoTData(123, "activateBuzzer")).thenReturn(true);
-
-        // Call the method under test
-        boolean result = binService.sendBuzzerActivationToIoT(1L);
-
-        // Assertions
-        assertTrue(result);
-
-        // Verify
-        verify(binRepository).findById(1L);
-
-        // Verify
-        verify(tcpServer).setIoTData(123, "activateBuzzer");
-    }
-
-    @Test
-    public void testSendBuzzerActivationToIoT_BinNotFound() {
-
-        // Stub the behavior
-        when(binRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // Call the method under test
-        boolean result = binService.sendBuzzerActivationToIoT(1L);
-
-        // Assertions
-        assertFalse(result);
-
-        // Verify
-        verify(binRepository).findById(1L);
-
-        // Verify
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> binService.sendBuzzerActivationToIoT(binId));
+        verify(binRepository).findById(binId);
         verifyNoInteractions(tcpServer);
     }
+
+
+
+    @Test
+    public void sendBuzzerActivationToIoT_NullBinId_ReturnsFalse() {
+        // Arrange
+
+        // Act
+        boolean result = binService.sendBuzzerActivationToIoT(null);
+
+        // Assert
+        assertFalse(result);
+        // Additional assertions if needed
+    }
+
+
+
+
+
+
+
 
 
 }

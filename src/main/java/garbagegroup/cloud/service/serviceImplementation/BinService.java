@@ -640,24 +640,23 @@ public class BinService implements IBinService {
 
     @Override
     public boolean sendBuzzerActivationToIoT(Long binId) {
-        try {
-            // Retrieve the device ID associated with the bin ID
+        if (binId == null) {
+            System.out.println("binId cannot be null");
+            return false;
+        } else {
             Optional<Bin> binOptional = binRepository.findById(binId);
             if (binOptional.isPresent()) {
                 int deviceId = binOptional.get().getDeviceId();
-                System.out.println("Sending buzzer activation to IoT device with ID " + deviceId+" for bin with ID "+binId);
-                return tcpServer.setIoTData(deviceId, "activateBuzzer");
+                if (hasActiveDevice(deviceId)) {
+                    return tcpServer.setIoTData(deviceId, "activateBuzzer");
+                } else {
+                    throw new NoSuchElementException("Device with ID " + deviceId + " is not active");
+                }
             } else {
                 throw new NoSuchElementException("Bin with id " + binId + " not found");
             }
-        } catch (Exception e) {
-            System.out.println("Error while sending buzzer activation to IoT device: " + e.getMessage());
-            return false;
         }
     }
-
-
-
 }
 
 
