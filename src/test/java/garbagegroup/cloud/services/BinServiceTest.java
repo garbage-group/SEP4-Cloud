@@ -1100,6 +1100,75 @@ public class BinServiceTest {
     }
 
     @Test
+    public void sendBuzzerActivationToIoT_Success() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(tcpServer.setIoTData(deviceId, "activateBuzzer")).thenReturn(true);
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertTrue(response);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_DeviceIsOnlineButReturnsFalse_ReturnsFalse() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(tcpServer.setIoTData(deviceId, "activateBuzzer")).thenReturn(false);
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertFalse(response);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_DeviceIsOffline_ReturnsFalse() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        when(tcpServer.getIoTDevices()).thenReturn(new ArrayList<>());
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertFalse(response);
+    }
+
+    @Test
     public void sendBuzzerActivationToIoT_BinNotFound_ThrowsNoSuchElementException() {
         // Arrange
         Long binId = 999L;
@@ -1111,26 +1180,11 @@ public class BinServiceTest {
         verifyNoInteractions(tcpServer);
     }
 
-
-
     @Test
-    public void sendBuzzerActivationToIoT_NullBinId_ReturnsFalse() {
-        // Arrange
-
-        // Act
-        boolean result = binService.sendBuzzerActivationToIoT(null);
-
+    public void sendBuzzerActivationToIoT_NullBinId_ThrowsIllegalArgumentException() {
         // Assert
-        assertFalse(result);
-        // Additional assertions if needed
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.sendBuzzerActivationToIoT(null);
+        });
     }
-
-
-
-
-
-
-
-
-
 }

@@ -32,6 +32,5 @@ public interface IBinService {
     void startPeriodicLevelRequest(int intervalSeconds);
     void stopPeriodicLevelRequest();
     void requestCurrentLevels();
-
     boolean sendBuzzerActivationToIoT(Long binId);
 }

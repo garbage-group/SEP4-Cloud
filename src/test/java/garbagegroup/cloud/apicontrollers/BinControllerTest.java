@@ -448,11 +448,30 @@ public class BinControllerTest {
         // Assertions
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Buzzer activation sent to IoT device for Bin ID: 123", response.getBody());
+        assertEquals("Buzzer activated on Bin ID: 123", response.getBody());
 
         // Verify that the method in the service was called with the correct parameter
         verify(binService, times(1)).sendBuzzerActivationToIoT(123L);
     }
+
+    @Test
+    public void testActivateBuzzer_DeviceIsOffline_ReturnsStatus400() {
+        // Arrange
+        Long binId = 123L;
+        when(binService.sendBuzzerActivationToIoT(binId)).thenReturn(false);
+
+        // Act
+        ResponseEntity<String> response = binController.activateBuzzer(binId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Device is offline or encountered an issue while activating buzzer for Bin ID: " + binId, response.getBody());
+
+        // Verify that the method in the service was called with the correct parameter
+        verify(binService, times(1)).sendBuzzerActivationToIoT(binId);
+    }
+
 
     @Test
     public void testActivateBuzzer_BinNotFound() {
@@ -465,6 +484,18 @@ public class BinControllerTest {
         // Verify that the response indicates Bin not found
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).contains("Bin not found with ID: 789");
+    }
+
+    @Test
+    public void testActivateBuzzer_BinIDNull_ThrowsIllegalArgumentException() {
+        // Act
+        when(binService.sendBuzzerActivationToIoT(null)).thenThrow(new IllegalArgumentException("Bin ID cannot be null"));
+        // Act
+        ResponseEntity<String> response = binController.activateBuzzer(null);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("Bin ID cannot be null");
     }
 
     @Test
