@@ -1,10 +1,7 @@
 package garbagegroup.cloud.apicontrollers;
 
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.NotificationBinDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.controller.BinController;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -28,6 +25,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -437,5 +435,80 @@ public class BinControllerTest {
         assertTrue(result.getBody().contains("online"));
     }
 
+    @Test
+    public void testActivateBuzzer_Success() {
+        // Mocking the dependencies
+
+        // Mock the behavior of binService.sendBuzzerActivationToIoT() method
+        when(binService.sendBuzzerActivationToIoT(123L)).thenReturn(true);
+
+        // Call the method to be tested
+        ResponseEntity<String> response = binController.activateBuzzer(123L);
+
+        // Assertions
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Buzzer activated on Bin ID: 123", response.getBody());
+
+        // Verify that the method in the service was called with the correct parameter
+        verify(binService, times(1)).sendBuzzerActivationToIoT(123L);
+    }
+
+    @Test
+    public void testActivateBuzzer_DeviceIsOffline_ReturnsStatus400() {
+        // Arrange
+        Long binId = 123L;
+        when(binService.sendBuzzerActivationToIoT(binId)).thenReturn(false);
+
+        // Act
+        ResponseEntity<String> response = binController.activateBuzzer(binId);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Device is offline or encountered an issue while activating buzzer for Bin ID: " + binId, response.getBody());
+
+        // Verify that the method in the service was called with the correct parameter
+        verify(binService, times(1)).sendBuzzerActivationToIoT(binId);
+    }
+
+
+    @Test
+    public void testActivateBuzzer_BinNotFound() {
+        // Mock the behavior of binService.sendBuzzerActivationToIoT to throw a NoSuchElementException
+        when(binService.sendBuzzerActivationToIoT(anyLong())).thenThrow(new NoSuchElementException("Bin not found with id: 789"));
+
+        // Perform the test by calling the controller method
+        ResponseEntity<String> response = binController.activateBuzzer(789L);
+
+        // Verify that the response indicates Bin not found
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Bin not found with ID: 789");
+    }
+
+    @Test
+    public void testActivateBuzzer_BinIDNull_ThrowsIllegalArgumentException() {
+        // Act
+        when(binService.sendBuzzerActivationToIoT(null)).thenThrow(new IllegalArgumentException("Bin ID cannot be null"));
+        // Act
+        ResponseEntity<String> response = binController.activateBuzzer(null);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("Bin ID cannot be null");
+    }
+
+    @Test
+    public void testActivateBuzzer_InternalServerError() {
+        // Mock the behavior of binService.sendBuzzerActivationToIoT to throw a generic Exception
+        when(binService.sendBuzzerActivationToIoT(anyLong())).thenThrow(new RuntimeException("Some internal error"));
+
+        // Perform the test by calling the controller method
+        ResponseEntity<String> response = binController.activateBuzzer(999L);
+
+        // Verify that the response indicates an internal server error
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).contains("Error processing buzzer activation for Bin ID: 999");
+    }
 
 }
