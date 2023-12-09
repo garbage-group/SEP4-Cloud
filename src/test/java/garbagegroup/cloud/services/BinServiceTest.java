@@ -1,9 +1,6 @@
 package garbagegroup.cloud.services;
 
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.NotificationBinDto;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -335,6 +332,7 @@ public class BinServiceTest {
     public void testFindBinById_WhenBinExists() {
         long binId = 1L;
         Bin bin = new Bin();
+        bin.setFillThreshold(20.0);
         when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
 
         Optional<BinDto> result = binService.findBinById(binId);
@@ -352,6 +350,171 @@ public class BinServiceTest {
         Optional<BinDto> result = binService.findBinById(binId);
 
         assertFalse(result.isPresent());
+    }
+
+    @Test
+    public void testFindById_WhenIoTDeviceIsOFFLINE() {
+        // Arrange
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setFillThreshold(20.0);
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        // Act
+        Optional<BinDto> result = binService.findBinById(binId);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("OFFLINE", result.get().getStatus());
+        assertEquals(bin.getId(), result.get().getId());
+        verify(binRepository).findById(binId);
+    }
+
+
+    @Test
+    public void testConvertToBinDtoAndSetValues_StatusACTIVE() {
+        // Arrange
+        int deviceId = 123;
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setId(binId);
+        bin.setFillThreshold(20.0);
+        bin.setDeviceId(deviceId);
+        Level latestLevel = new Level();
+        latestLevel.setValue(60);
+        latestLevel.setDateTime(LocalDateTime.now());
+        bin.setFillLevels(Arrays.asList(latestLevel));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+        when(tcpServer.getDataById(deviceId, "getStatus")).thenReturn("statu:OK");
+
+        // Act
+        BinDto returnedDto = binService.convertToBinDtoAndSetValues(bin);
+
+        // Assert
+        assertEquals(returnedDto.getStatus(), "ACTIVE");
+    }
+
+    @Test
+    public void testConvertToBinDtoAndSetValues_StatusERROR() {
+        // Arrange
+        int deviceId = 123;
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setId(binId);
+        bin.setFillThreshold(20.0);
+        bin.setDeviceId(deviceId);
+        Level latestLevel = new Level();
+        latestLevel.setValue(60);
+        latestLevel.setDateTime(LocalDateTime.now());
+        bin.setFillLevels(Arrays.asList(latestLevel));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+        when(tcpServer.getDataById(deviceId, "getStatus")).thenReturn("statu:NOT OK");
+
+        // Act
+        BinDto returnedDto = binService.convertToBinDtoAndSetValues(bin);
+
+        // Assert
+        assertEquals(returnedDto.getStatus(), "ERROR");
+    }
+
+
+    @Test
+    public void testConvertToBinDtoAndSetValues_StatusOFFLINE() {
+        // Arrange
+        int deviceId = 123;
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setId(binId);
+        bin.setFillThreshold(20.0);
+        bin.setDeviceId(deviceId);
+        Level latestLevel = new Level();
+        latestLevel.setValue(60);
+        latestLevel.setDateTime(LocalDateTime.now());
+        bin.setFillLevels(Arrays.asList(latestLevel));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+        when(tcpServer.getDataById(deviceId, "getStatus")).thenReturn("statu:");
+
+        // Act
+        BinDto returnedDto = binService.convertToBinDtoAndSetValues(bin);
+
+        // Assert
+        assertEquals(returnedDto.getStatus(), "OFFLINE");
+    }
+
+    @Test
+    public void testSetPickupDate_LastFillLevelReadingIsOutsideOfWorkingHours() {
+        // Arrange
+        int deviceId = 123;
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setId(binId);
+        bin.setFillThreshold(20.0);
+        bin.setDeviceId(deviceId);
+        Level latestLevel = new Level();
+        latestLevel.setValue(60);
+        latestLevel.setDateTime(LocalDateTime.of(2023, 12, 7, 15, 50, 23));
+        bin.setFillLevels(Arrays.asList(latestLevel));
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        // Test method
+        LocalDateTime dateTime = binService.setPickupDate(bin);
+
+        // Assertions
+        // We set up the latest Level reading to 7th day of the month but the time is after working hours
+        // Therefore the setPickUpTime will be set to the day after, so the 8th
+        assertEquals(dateTime.getDayOfMonth(), 8);
+    }
+
+    @Test
+    public void testSetPickupDate_LastFillLevelReadingIsWithinWorkingHours() {
+        // Arrange
+        int deviceId = 123;
+        Long binId = 1L;
+        Bin bin = new Bin();
+        bin.setId(binId);
+        bin.setFillThreshold(20.0);
+        bin.setDeviceId(deviceId);
+        Level latestLevel = new Level();
+        latestLevel.setValue(60);
+        latestLevel.setDateTime(LocalDateTime.of(2023, 12, 7, 10, 50, 23));
+        bin.setFillLevels(Arrays.asList(latestLevel));
+
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        // Test method
+        LocalDateTime dateTime = binService.setPickupDate(bin);
+
+        // Assert
+        // Expect that the scheduled pick-up is set to be on the same day, 3 hours later
+        // As the level last reading is within working hours
+        assertEquals(dateTime.getDayOfMonth(), 7);
+        assertEquals(dateTime.getHour(), 13);
     }
 
     @Test
@@ -936,5 +1099,92 @@ public class BinServiceTest {
         assertNull(bin.getEmptiedLast());
     }
 
+    @Test
+    public void sendBuzzerActivationToIoT_Success() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
 
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(tcpServer.setIoTData(deviceId, "activateBuzzer")).thenReturn(true);
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertTrue(response);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_DeviceIsOnlineButReturnsFalse_ReturnsFalse() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        Socket mockedSocket = mock(Socket.class);
+        List<ServerSocketHandler> IoTDevices = new ArrayList<>();
+        ServerSocketHandler ssh = new ServerSocketHandler(mockedSocket);
+        ssh.setDeviceId(deviceId);
+        IoTDevices.add(ssh);
+        when(tcpServer.getIoTDevices()).thenReturn(IoTDevices);
+        when(tcpServer.setIoTData(deviceId, "activateBuzzer")).thenReturn(false);
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertFalse(response);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_DeviceIsOffline_ReturnsFalse() {
+        // Arrange
+        Bin bin = new Bin();
+        Long binId = 123L;
+        bin.setId(binId);
+        int deviceId = 1234;
+        bin.setDeviceId(deviceId);
+        when(binRepository.findById(binId)).thenReturn(Optional.of(bin));
+
+        when(tcpServer.getIoTDevices()).thenReturn(new ArrayList<>());
+
+        // Act
+        boolean response = binService.sendBuzzerActivationToIoT(123L);
+
+        // Assert
+        assertFalse(response);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_BinNotFound_ThrowsNoSuchElementException() {
+        // Arrange
+        Long binId = 999L;
+        when(binRepository.findById(binId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> binService.sendBuzzerActivationToIoT(binId));
+        verify(binRepository).findById(binId);
+        verifyNoInteractions(tcpServer);
+    }
+
+    @Test
+    public void sendBuzzerActivationToIoT_NullBinId_ThrowsIllegalArgumentException() {
+        // Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            binService.sendBuzzerActivationToIoT(null);
+        });
+    }
 }

@@ -67,7 +67,7 @@ public class TCPServer implements ITCPServer, Runnable {
     /**
      * Sends data to the IoT device through their respective server socket handlers
      *
-     * @param payload - for example - "setFillThreshold(25.0)", "calibrateDevice"
+     * @param payload - for example - "setFillThreshold(25.0)", "calibrateDevice", "activateBuzzer"
      * @return The response received from the IoT devices after attempting to set the fill threshold
      */
     @Override

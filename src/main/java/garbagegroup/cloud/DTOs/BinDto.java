@@ -135,4 +135,6 @@ public class BinDto {
     public void setPickUpTime(LocalDateTime pickUpTime) {
         this.pickUpTime = pickUpTime;
     }
+
+
 }
