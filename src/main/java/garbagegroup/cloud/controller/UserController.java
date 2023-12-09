@@ -22,13 +22,11 @@ import java.util.List;
 @CrossOrigin
 public class UserController {
     private final IUserService userService;
-    private final UserService service;
     private Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
-    public UserController(IUserService userService, UserService service) {
+    public UserController(IUserService userService) {
         this.userService = userService;
-        this.service = service;
     }
 
     @GetMapping("/{username}")
@@ -45,7 +43,7 @@ public class UserController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody UserDto request) {
         try {
-            return ResponseEntity.ok(service.authenticate(request));
+            return ResponseEntity.ok(userService.authenticate(request));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }

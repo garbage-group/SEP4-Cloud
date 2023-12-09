@@ -70,6 +70,9 @@ public class Client {
                 else if (result.equals("calibrateDevice")) {
                     outToServer.write("OK".getBytes());
                     outToServer.flush();
+                } else if (result.equals("activateBuzzer")) {
+                    outToServer.write("OK".getBytes());
+                    outToServer.flush();
                 }
             }
             catch (IOException e)

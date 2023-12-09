@@ -637,6 +637,23 @@ public class BinService implements IBinService {
             System.out.println("Error while trying periodical level retrieval of connected devices.");
         }
     }
+
+    @Override
+    public boolean sendBuzzerActivationToIoT(Long binId) {
+        if (binId == null) {
+            System.out.println("binId cannot be null");
+            throw new IllegalArgumentException("Bin ID cannot be null");
+        } else {
+            Optional<Bin> binOptional = binRepository.findById(binId);
+            if (binOptional.isPresent()) {
+                int deviceId = binOptional.get().getDeviceId();
+                if (hasActiveDevice(deviceId)) return tcpServer.setIoTData(deviceId, "activateBuzzer");
+                 else return false;
+            } else {
+                throw new NoSuchElementException("Bin with id " + binId + " not found");
+            }
+        }
+    }
 }
 
 
