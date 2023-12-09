@@ -38,6 +38,7 @@ public class UserController {
             UserDto userDto = DTOConverter.convertToUserDto(user); // Call the convertToUserDto method from UserService
             return new ResponseEntity<>(userDto, HttpStatus.OK);
         } catch (Exception e) {
+            logger.error("Error getting user with username" + username, e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -47,6 +48,7 @@ public class UserController {
         try {
             return ResponseEntity.ok(service.authenticate(request));
         } catch (Exception e) {
+            logger.error("Error authenticating user with username: " + request.getUsername(), e);
             return ResponseEntity.notFound().build();
         }
     }

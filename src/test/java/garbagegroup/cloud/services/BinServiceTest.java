@@ -1,9 +1,6 @@
 package garbagegroup.cloud.services;
 
-import garbagegroup.cloud.DTOs.BinDto;
-import garbagegroup.cloud.DTOs.CreateBinDTO;
-import garbagegroup.cloud.DTOs.NotificationBinDto;
-import garbagegroup.cloud.DTOs.UpdateBinDto;
+import garbagegroup.cloud.DTOs.*;
 import garbagegroup.cloud.model.Bin;
 import garbagegroup.cloud.model.Humidity;
 import garbagegroup.cloud.model.Level;
@@ -261,11 +258,10 @@ public class BinServiceTest {
     public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLongitude() {
         //Arrange
         UpdateBinDto updateBinDto = new UpdateBinDto(1L, 1000D, 40D, 40D);
-        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
 
         //Act and assert
         assertThrows(IllegalArgumentException.class, () -> {
-            binService.updateBinFields(bin, updateBinDto);
+            binService.updateBinFields(updateBinDto);
         });
     }
 
@@ -273,11 +269,10 @@ public class BinServiceTest {
     public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidLatitude() {
         //Arrange
         UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 1000D, 40D);
-        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
 
         //Act and assert
         assertThrows(IllegalArgumentException.class, () -> {
-            binService.updateBinFields(bin, updateBinDto);
+            binService.updateBinFields(updateBinDto);
         });
     }
 
@@ -285,11 +280,10 @@ public class BinServiceTest {
     public void updateBinFields_ThrowsInvalidArgumentExceptions_ForInvalidFillThreshold() {
         //Arrange
         UpdateBinDto updateBinDto = new UpdateBinDto(1L, 10D, 40D, 180D);
-        Bin bin = new Bin(40D, 40D, 1000D, 40D, null, null);
 
         //Act and assert
         assertThrows(IllegalArgumentException.class, () -> {
-            binService.updateBinFields(bin, updateBinDto);
+            binService.updateBinFields(updateBinDto);
         });
     }
 
@@ -664,7 +658,7 @@ public class BinServiceTest {
 
         // Arrange
         BinService binService = new BinService();
-        NotificationBinDto dto = binService.convertToDTO(bin, latestLevel);
+        NotificationBinDto dto = DTOConverter.binToNotificationBinDto(bin, latestLevel);
 
         // Assert
         Assertions.assertEquals(bin.getFillThreshold(), dto.getFillThreshold());

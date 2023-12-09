@@ -22,6 +22,23 @@ public class DTOConverter {
         return dto;
     }
 
+    public static Bin createBinDtoToBin(CreateBinDTO createBinDto) {
+        Bin bin = new Bin();
+        bin.setLongitude(createBinDto.getLongitude());
+        bin.setLatitude(createBinDto.getLatitude());
+        bin.setCapacity(createBinDto.getCapacity());
+        bin.setFillThreshold(createBinDto.getFillThreshold());
+        return bin;
+    }
+
+    public static Bin updateBinDtoToBin(UpdateBinDto updateBinDto) {
+        Bin bin = new Bin();
+        bin.setLongitude(updateBinDto.getLongitude());
+        bin.setLatitude(updateBinDto.getLatitude());
+        bin.setFillThreshold(updateBinDto.getFillthreshold());
+        return bin;
+    }
+
     public static User createUserDtoToUser(CreateUserDto createUserDto) {
         return new User(
                 createUserDto.getUsername(),
@@ -40,4 +57,15 @@ public class DTOConverter {
         dto.setRegion(user.getRegion());
         return dto;
     }
+
+    public static NotificationBinDto binToNotificationBinDto(Bin bin, Level latestLevel) {
+        return new NotificationBinDto(
+                bin.getFillThreshold(),
+                bin.getId(),
+                latestLevel.getValue(),
+                latestLevel.getDateTime()
+        );
+    }
+
+
 }

@@ -336,7 +336,7 @@ public class BinService implements IBinService {
     @Override
     public Bin create(CreateBinDTO binDTO) {
         Bin createdBin;
-        Bin newBin = new Bin(binDTO.getLongitude(), binDTO.getLatitude(), binDTO.getCapacity(), binDTO.getFillThreshold(), null, null);
+        Bin newBin = DTOConverter.createBinDtoToBin(binDTO);
         int deviceId = getAvailableDevice();
         if (deviceId == 0) {
             Random random = new Random();
@@ -425,7 +425,7 @@ public class BinService implements IBinService {
         if (binOptional.isPresent()) {
             Bin bin = binOptional.get();
             try {
-                updateBinFields(bin, updatedBinDto);
+                bin = updateBinFields(updatedBinDto);
                 bin.setId(updatedBinDto.getId());
                 binRepository.save(bin);
                 return true;
@@ -442,28 +442,21 @@ public class BinService implements IBinService {
      * Updates the fields of the Bin object based on the values provided in the UpdateBinDto.
      * Validates and sets the longitude, latitude, and fill threshold values for the Bin.
      *
-     * @param bin           The Bin object to be updated
      * @param updatedBinDto The DTO containing updated values for the Bin
      * @throws IllegalArgumentException if the provided longitude, latitude, or fill threshold is invalid
      *                                  or if the fill threshold is lower than the last recorded level reading
      */
-    public void updateBinFields(Bin bin, UpdateBinDto updatedBinDto) {
-        if (isValidLongitude(updatedBinDto.getLongitude())) {
-            bin.setLongitude(updatedBinDto.getLongitude());
-        } else {
+    public Bin updateBinFields(UpdateBinDto updatedBinDto) {
+        if (!isValidLongitude(updatedBinDto.getLongitude())) {
             throw new IllegalArgumentException("longitude should be in between -180 and 180");
         }
-
-        if (isValidLatitude(updatedBinDto.getLatitude())) {
-            bin.setLatitude(updatedBinDto.getLatitude());
-        } else {
+        if (!isValidLatitude(updatedBinDto.getLatitude())) {
             throw new IllegalArgumentException("latitude should ne between -90 and 90");
         }
-
-        if (isValidThreshold(updatedBinDto.getFillthreshold())) {
-            bin.setFillThreshold(updatedBinDto.getFillthreshold());
-        } else {
+        if (!isValidThreshold(updatedBinDto.getFillthreshold())) {
             throw new IllegalArgumentException("threshold value should be between 0 and 100");
+        } else {
+            return DTOConverter.updateBinDtoToBin(updatedBinDto);
         }
     }
 
@@ -531,7 +524,7 @@ public class BinService implements IBinService {
         if (isActiveDevice) {
             Level currentLevelFromDevice = getCurrentFillLevelByBinId(bin.getId()).orElse(null);
             if (currentLevelFromDevice != null && currentLevelFromDevice.getValue() > bin.getFillThreshold()) {
-                return convertToDTO(bin, currentLevelFromDevice);
+                return DTOConverter.binToNotificationBinDto(bin, currentLevelFromDevice);
             }
         } else {
             Level lastLevelWithTimestamp = getLastLevelReadingWithTimestamp(bin.getId());
@@ -539,7 +532,7 @@ public class BinService implements IBinService {
 
             if (currentFillLevel > bin.getFillThreshold()) {
                 LocalDateTime timestamp = lastLevelWithTimestamp.getDateTime();
-                return convertToDTO(bin, new Level(currentFillLevel, timestamp));
+                return DTOConverter.binToNotificationBinDto(bin, new Level(currentFillLevel, timestamp));
             }
         }
         return null;
@@ -563,15 +556,6 @@ public class BinService implements IBinService {
             else if (response.equals("statu:NOT OK")) return false;
             else throw new NoSuchElementException("The device on bin " + binId + " is offline");
         } else throw new NoSuchElementException("Bin with id " + binId + " not found");
-    }
-
-    public NotificationBinDto convertToDTO(Bin bin, Level latestLevel) {
-        return new NotificationBinDto(
-                bin.getFillThreshold(),
-                bin.getId(),
-                latestLevel.getValue(),
-                latestLevel.getDateTime()
-        );
     }
 
     /**
