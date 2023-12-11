@@ -45,11 +45,20 @@ public class UserService implements IUserService {
     public User fetchUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
-            return user;
+            // Creating a new User object to send with a placeholder password
+            User userToSend = new User();
+            userToSend.setUsername(user.getUsername());
+            userToSend.setRole(user.getRole());
+            userToSend.setFullname(user.getFullname());
+            userToSend.setRegion(user.getRegion());
+            userToSend.setPassword("********"); // Placeholder password
+
+            return userToSend;
         } else {
             throw new NoSuchElementException("User with username " + username + " not found");
         }
     }
+
 
     /**
      * Deletes Garbage collector in the DB by their username
@@ -79,7 +88,11 @@ public class UserService implements IUserService {
         try {
             User userToUpdate = userRepository.findByUsername(user.getUsername());
             if (userToUpdate != null) {
-                userToUpdate.setPassword(this.passwordEncoder.encode(user.getPassword()));
+                // Check if the received password is different from the stored password
+                if (!user.getPassword().equals("********")) {
+                    userToUpdate.setPassword(this.passwordEncoder.encode(user.getPassword()));
+                }
+                // Update other fields
                 userToUpdate.setFullname(user.getFullname());
                 userToUpdate.setRegion(user.getRegion());
                 // Save the updated user to the database
@@ -92,6 +105,7 @@ public class UserService implements IUserService {
         }
         return false;
     }
+
 
     /**
         * Fetches all users from the database.
